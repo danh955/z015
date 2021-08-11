@@ -1,0 +1,39 @@
+﻿/*
+    Listless Header navigation.
+*/
+nav.listless a,
+nav.listless > div {
+    display: inline-block;
+    padding: 5px;
+    color: black;
+    text-decoration: none;
+}
+
+    nav.listless a:hover,
+    nav.listless > div:hover {
+        background: #232323;
+        color: #EFEFEF;
+    }
+
+    /* Drop down menu. */
+    nav.listless > div > div {
+        display: none;
+        position: absolute;
+        background-color: aliceblue;
+    }
+
+        nav.listless > div > div > a {
+            display: block;
+            padding: 0.5rem 1rem 0.5rem 1rem;
+        }
+
+    nav.listless > div:hover > div {
+        display: block;
+        position: absolute;
+        z-index: 1;
+        margin-top: 5px;
+        margin-left: -1rem;
+        border-right: thin solid gray;
+        border-bottom: thin solid gray;
+        border-left: thin solid gray;
+    }
