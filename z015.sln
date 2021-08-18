@@ -6,7 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DD13ECF5-B18D-471E-9EC2-5F64F4B0B201}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		Architecture.md = Architecture.md
+		DevEnvironment.md = DevEnvironment.md
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
@@ -14,6 +14,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z015.Website", "Z015.Website\Z015.Website.csproj", "{913AC65E-AB19-438A-A493-301A3C5AEB6F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z015.Repository", "Z015.Repository\Z015.Repository.csproj", "{C30931FA-2F46-4D56-A961-4571D1E5DF75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z015.AppFeature", "Z015.AppFeature\Z015.AppFeature.csproj", "{90803518-8D38-4F97-891C-5AF75E86DF16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{C30931FA-2F46-4D56-A961-4571D1E5DF75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C30931FA-2F46-4D56-A961-4571D1E5DF75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C30931FA-2F46-4D56-A961-4571D1E5DF75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90803518-8D38-4F97-891C-5AF75E86DF16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90803518-8D38-4F97-891C-5AF75E86DF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90803518-8D38-4F97-891C-5AF75E86DF16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90803518-8D38-4F97-891C-5AF75E86DF16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

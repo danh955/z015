@@ -8,11 +8,9 @@
 ### NuGet
 
 
-### Roslyn Analyzers
+### Code Analyzers
 
 - [StyleCop.Analyzers](https://www.nuget.org/packages/StyleCop.Analyzers)
-- <s>[Microsoft.CodeAnalysis.NetAnalyzers](https://www.nuget.org/packages/Microsoft.CodeAnalysis.NetAnalyzers)</s>
-  - Right click Project file > Properties > Code Analysis > "Enable .NET Analyzers" = checked.  (default is checked for C# 9.0)
 
 ### Unit testing
 
@@ -24,6 +22,7 @@
 ### Visual Studio Settings
 
 - Tools > Options > Text Editor > C# > Advanced > Using Directive > Place 'System' directives first when sorting using = Checked.
+- Tools > Options > Projects and Solutions > General > Track Active Item in Solution Explorer = Checked.
 
 ### Visual Studio Extensions
 

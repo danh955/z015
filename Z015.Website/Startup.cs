@@ -9,6 +9,7 @@ namespace Z015.Website
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Z015.AppFeature;
 
     /// <summary>
     /// Startup class.
@@ -39,6 +40,7 @@ namespace Z015.Website
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddAppFeatureService();
         }
 
         /// <summary>
