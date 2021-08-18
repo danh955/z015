@@ -17,19 +17,19 @@ namespace Z015.Repository.EntityTypeConfiguration
         {
             builder.ToTable("OpenPosition");
             builder.HasKey(s => s.Id);
-            builder.Property(s => s.UserId).HasColumnName("UserId").IsRequired();
+            builder.Property(s => s.PortfolioId).HasColumnName("PortfolioId").IsRequired();
             builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired();
             builder.Property(s => s.BuyDate).HasColumnName("BuyDate").IsRequired();
             builder.Property(s => s.Quantity).HasColumnName("Quantity").IsRequired();
             builder.Property(s => s.Purchase).HasColumnName("Purchase").IsRequired();
             builder.Property(s => s.Cost).HasColumnName("Cost").IsRequired();
 
-            builder.HasIndex(s => new { s.UserId, s.Symbol, s.BuyDate }).IsUnique();
+            builder.HasIndex(s => new { s.PortfolioId, s.Symbol, s.BuyDate }).IsUnique();
 
-            // Many open positions has one user.
-            builder.HasOne<UserEntity>(o => o.User)
-                .WithMany(u => u.OpenPositions)
-                .HasForeignKey(o => o.UserId);
+            // One Portfolio has many open positions.
+            builder.HasOne<PortfolioEntity>(o => o.Portfolio)
+                .WithMany(p => p.OpenPositions)
+                .HasForeignKey(o => o.PortfolioId);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Z015.Repository
     using System;
 
     /// <summary>
-    /// Close stock position class.
+    /// Close stock position entity class.
     /// </summary>
     public class ClosePositionEntity
     {
@@ -17,9 +17,9 @@ namespace Z015.Repository
         public int Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the user ID.
+        /// Gets or sets the portfolio ID.
         /// </summary>
-        public int UserId { get; set; }
+        public int PortfolioId { get; set; }
 
         /// <summary>
         ///  Gets or sets the stock symbol.
@@ -57,8 +57,8 @@ namespace Z015.Repository
         public decimal Proceeds { get; set; }
 
         /// <summary>
-        /// Gets or sets the user.
+        /// Gets or sets the portfolio.
         /// </summary>
-        public UserEntity User { get; set; }
+        public PortfolioEntity Portfolio { get; set; }
     }
 }

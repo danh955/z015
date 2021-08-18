@@ -7,7 +7,7 @@ namespace Z015.Repository
     using System.Collections.Generic;
 
     /// <summary>
-    /// User class.
+    /// User entity class.
     /// </summary>
     //// TODO: Work out logging in.
     public class UserEntity
@@ -23,18 +23,8 @@ namespace Z015.Repository
         public string LoginName { get; set; }
 
         /// <summary>
-        /// Gets or sets the close positions.
+        /// Gets or sets the portfolios.
         /// </summary>
-        public List<ClosePositionEntity> ClosePositions { get; set; }
-
-        /// <summary>
-        /// Gets or sets the open positions.
-        /// </summary>
-        public List<OpenPositionEntity> OpenPositions { get; set; }
-
-        /// <summary>
-        /// Gets or sets the orders.
-        /// </summary>
-        public List<OrderEntity> Orders { get; set; }
+        public List<PortfolioEntity> Portfolios { get; set; }
     }
 }
