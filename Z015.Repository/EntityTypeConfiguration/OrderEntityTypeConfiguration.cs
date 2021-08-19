@@ -15,13 +15,13 @@ namespace Z015.Repository.EntityTypeConfiguration
         /// <inheritdoc/>
         public void Configure(EntityTypeBuilder<OrderEntity> builder)
         {
-            builder.ToTable("OpenPosition");
+            builder.ToTable("Order");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.PortfolioId).HasColumnName("PortfolioId").IsRequired();
-            builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired();
+            builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired().HasMaxLength(16);
             builder.Property(s => s.ActionType).HasColumnName("ActionType").IsRequired();
-            builder.Property(s => s.Quantity).HasColumnName("Quantity").IsRequired();
-            builder.Property(s => s.FillDate).HasColumnName("FillDate");
+            builder.Property(s => s.Quantity).HasColumnName("Quantity").IsRequired().HasPrecision(19, 6);
+            builder.Property(s => s.FillDate).HasColumnName("FillDate").IsRequired().HasColumnType("date");
 
             builder.HasIndex(s => new { s.PortfolioId, s.Symbol, s.ActionType }).IsUnique();
 

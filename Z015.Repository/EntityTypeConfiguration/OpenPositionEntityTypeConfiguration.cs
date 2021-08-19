@@ -18,11 +18,11 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.ToTable("OpenPosition");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.PortfolioId).HasColumnName("PortfolioId").IsRequired();
-            builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired();
-            builder.Property(s => s.BuyDate).HasColumnName("BuyDate").IsRequired();
-            builder.Property(s => s.Quantity).HasColumnName("Quantity").IsRequired();
-            builder.Property(s => s.Purchase).HasColumnName("Purchase").IsRequired();
-            builder.Property(s => s.Cost).HasColumnName("Cost").IsRequired();
+            builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired().HasMaxLength(16);
+            builder.Property(s => s.BuyDate).HasColumnName("BuyDate").IsRequired().HasColumnType("date");
+            builder.Property(s => s.Quantity).HasColumnName("Quantity").IsRequired().HasPrecision(19, 6);
+            builder.Property(s => s.Purchase).HasColumnName("Purchase").IsRequired().HasPrecision(19, 6);
+            builder.Property(s => s.Cost).HasColumnName("Cost").IsRequired().HasPrecision(19, 6);
 
             builder.HasIndex(s => new { s.PortfolioId, s.Symbol, s.BuyDate }).IsUnique();
 

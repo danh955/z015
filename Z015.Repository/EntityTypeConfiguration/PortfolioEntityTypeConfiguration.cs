@@ -18,7 +18,7 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.ToTable("Portfolio");
             builder.HasKey(p => p.Id);
             builder.Property(p => p.UserId).HasColumnName("UserId").IsRequired();
-            builder.Property(p => p.Name).HasColumnName("Name").IsRequired();
+            builder.Property(p => p.Name).HasColumnName("Name").IsRequired().HasMaxLength(100);
 
             builder.HasIndex(p => new { p.UserId, p.Name }).IsUnique();
 

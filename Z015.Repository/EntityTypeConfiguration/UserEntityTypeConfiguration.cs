@@ -18,7 +18,7 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.ToTable("User");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.Id).HasColumnName("Id").IsRequired();
-            builder.Property(s => s.LoginName).HasColumnName("LoginName").IsRequired();
+            builder.Property(s => s.LoginName).HasColumnName("LoginName").IsRequired().HasMaxLength(100);
 
             builder.HasIndex(s => s.LoginName).IsUnique();
         }

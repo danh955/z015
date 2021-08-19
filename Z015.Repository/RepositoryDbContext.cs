@@ -26,6 +26,11 @@ namespace Z015.Repository
         public DbSet<UserEntity> Users { get; set; }
 
         /// <summary>
+        /// Gets or sets the user table.
+        /// </summary>
+        public DbSet<PortfolioEntity> Portfolios { get; set; }
+
+        /// <summary>
         /// Gets or sets the closed positions table.
         /// </summary>
         public DbSet<ClosePositionEntity> ClosePositions { get; set; }

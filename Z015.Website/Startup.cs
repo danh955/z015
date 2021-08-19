@@ -6,10 +6,12 @@ namespace Z015.Website
 {
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Z015.AppFeature;
+    using Z015.Repository;
 
     /// <summary>
     /// Startup class.
@@ -38,8 +40,11 @@ namespace Z015.Website
         /// <param name="services">IServiceCollection.</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = this.Configuration.GetConnectionString("SqlDatabase");
+
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString, p => p.MigrationsAssembly(typeof(Startup).Namespace)));
             services.AddAppFeatureService();
         }
 
@@ -61,6 +66,8 @@ namespace Z015.Website
                 app.UseHsts();
             }
 
+            EnsureDatabaseIsCreated(app);
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -71,6 +78,14 @@ namespace Z015.Website
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
+        }
+
+        private static void EnsureDatabaseIsCreated(IApplicationBuilder app)
+        {
+            var factory = app.ApplicationServices.GetRequiredService<IDbContextFactory<RepositoryDbContext>>();
+            using var context = factory.CreateDbContext();
+            context.Database.EnsureCreated();
+            //// context.Database.Migrate();
         }
     }
 }
