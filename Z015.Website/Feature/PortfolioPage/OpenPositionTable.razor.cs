@@ -7,7 +7,6 @@ namespace Z015.Website.Feature.PortfolioPage
     using System.Collections.Generic;
     using Microsoft.AspNetCore.Components;
     using Z015.AppFeature.PortfolioPage;
-    using static Z015.AppFeature.PortfolioPage.OpenPositionListService;
 
     /// <summary>
     /// Open position table partial class.

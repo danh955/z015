@@ -4,32 +4,40 @@
 
 namespace Z015.AppFeature.PortfolioPage
 {
-    using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using Microsoft.EntityFrameworkCore;
+    using Z015.Repository;
 
     /// <summary>
     /// Open position list service.
     /// </summary>
     public class OpenPositionListService
     {
-        private static readonly List<OpenPosition> TestData = new()
+        private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OpenPositionListService"/> class.
+        /// </summary>
+        /// <param name="dbFactory">Repository database context factory.</param>
+        public OpenPositionListService(IDbContextFactory<RepositoryDbContext> dbFactory)
         {
-            new OpenPosition(1, "MSFT", new DateTime(2021, 6, 7), 40, 249.95m, 9998.00m),
-            new OpenPosition(2, "GOOG", new DateTime(2021, 7, 22), 1, 2653.00m, 2653.00m),
-        };
+            this.dbFactory = dbFactory;
+        }
 
         /// <summary>
         /// Get open positions.
         /// </summary>
+        /// <param name="portfolioId">Portfolio ID.</param>
         /// <returns>List of open positions.</returns>
-        public List<OpenPosition> GetOpenPositions()
+        public List<OpenPosition> GetOpenPositions(int portfolioId = 0)
         {
-            return TestData;
-        }
+            using var db = this.dbFactory.CreateDbContext();
 
-        /// <summary>
-        /// Open position record.
-        /// </summary>
-        public record OpenPosition(int Id, string Symbol, DateTime BuyDate, decimal Quantity, decimal Purchase, decimal Cost);
+            return db.OpenPositions
+                .Where(o => o.PortfolioId == portfolioId)
+                .Select(o => new OpenPosition(o.Id, o.Symbol, o.BuyDate, o.Quantity, o.Purchase, o.Cost))
+                .ToList();
+        }
     }
 }
