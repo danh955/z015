@@ -7,6 +7,8 @@
 
 ### NuGet
 
+- [Microsoft.EntityFrameworkCore.Relational](https://docs.microsoft.com/en-us/ef/core)
+- [CsvHelper](https://joshclose.github.io/CsvHelper)
 
 ### Code Analyzers
 
@@ -17,7 +19,8 @@
 - [xUnit](https://www.nuget.org/packages/xunit)
 - [xUnit.runner.visualstudio](https://www.nuget.org/packages/xunit.runner.visualstudio)
 - [Moq](https://www.nuget.org/packages/Moq)
-- [Microsoft.NET.Test.Sdk](Microsoft.NET.Test.Sdk) - needed for Visual Studio IDE and xUnit
+- [Microsoft.NET.Test.Sdk](https://www.nuget.org/packages/Microsoft.NET.Test.SDK) - needed for Visual Studio IDE and xUnit
+- [Divergic.Logging.Xunit](https://www.nuget.org/packages/Divergic.Logging.Xunit) - For ILogger
 
 ### Visual Studio Settings
 
