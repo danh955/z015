@@ -4,7 +4,6 @@
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using Hilres.FinanceClient.Abstraction;
     using Hilres.FinanceClient.YahooFinance;
     using Microsoft.Extensions.Logging;
     using Serilog;

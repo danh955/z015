@@ -12,7 +12,6 @@ namespace Hilres.FinanceClient.YahooFinance
     using System.Threading.Tasks;
     using CsvHelper;
     using CsvHelper.Configuration;
-    using Hilres.FinanceClient.Abstraction;
     using Microsoft.Extensions.Logging;
 
     /// <summary>

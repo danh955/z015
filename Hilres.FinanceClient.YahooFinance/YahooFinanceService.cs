@@ -6,7 +6,6 @@ namespace Hilres.FinanceClient.YahooFinance
 {
     using System;
     using System.Net.Http;
-    using Hilres.FinanceClient.Abstraction;
     using Microsoft.Extensions.Logging;
 
     /// <summary>

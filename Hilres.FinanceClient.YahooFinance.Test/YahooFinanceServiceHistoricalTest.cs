@@ -8,7 +8,6 @@ namespace Hilres.FinanceClient.YahooFinance.Test
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Hilres.FinanceClient.Abstraction;
     using Hilres.FinanceClient.YahooFinance;
     using Xunit;
     using Xunit.Abstractions;
