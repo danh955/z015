@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.YahooF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppTest", "ConsoleAppTest\ConsoleAppTest.csproj", "{593D3D49-593A-4573-819E-2925F820AC63}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.Tiingo", "Hilres.FinanceClient.Tiingo\Hilres.FinanceClient.Tiingo.csproj", "{9099F2FF-B7EC-4954-842E-48D77CAE739C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hilres.FinanceClient.Tiingo.Test", "Hilres.FinanceClient.Tiingo.Test\Hilres.FinanceClient.Tiingo.Test.csproj", "{A607E776-3901-4030-9D4A-6D1C5ACFA124}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +57,14 @@ Global
 		{593D3D49-593A-4573-819E-2925F820AC63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{593D3D49-593A-4573-819E-2925F820AC63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{593D3D49-593A-4573-819E-2925F820AC63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9099F2FF-B7EC-4954-842E-48D77CAE739C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9099F2FF-B7EC-4954-842E-48D77CAE739C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9099F2FF-B7EC-4954-842E-48D77CAE739C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9099F2FF-B7EC-4954-842E-48D77CAE739C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A607E776-3901-4030-9D4A-6D1C5ACFA124}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A607E776-3901-4030-9D4A-6D1C5ACFA124}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A607E776-3901-4030-9D4A-6D1C5ACFA124}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A607E776-3901-4030-9D4A-6D1C5ACFA124}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -27,9 +27,9 @@
 
             stopWatch.Start();
             var service = new YahooFinanceService(logger);
-            var result1 = await service.GetStockPricesAsync("QQQ", new(2021, 3, 9), new(2021, 3, 14), StockInterval.Daily, CancellationToken.None);
-            var result2 = await service.GetStockPricesAsync("QQQ", new(2020, 12, 14), new(2021, 3, 14), StockInterval.Weekly, CancellationToken.None);
-            var result3 = await service.GetStockPricesAsync("QQQ", new(2020, 10, 1), new(2021, 3, 14), StockInterval.Monthly, CancellationToken.None);
+            var result1 = await service.GetStockPricesAsync("QQQ", new(2021, 3, 9), new(2021, 3, 14), YahooInterval.Daily, CancellationToken.None);
+            var result2 = await service.GetStockPricesAsync("QQQ", new(2020, 12, 14), new(2021, 3, 14), YahooInterval.Weekly, CancellationToken.None);
+            var result3 = await service.GetStockPricesAsync("QQQ", new(2020, 10, 1), new(2021, 3, 14), YahooInterval.Monthly, CancellationToken.None);
             stopWatch.Stop();
 
             TimeSpan ts = stopWatch.Elapsed;

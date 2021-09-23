@@ -13,12 +13,6 @@ namespace Hilres.FinanceClient.YahooFinance
     /// </summary>
     internal static class HelperExtensions
     {
-        private static readonly TimeZoneInfo EasternTimeZone = TimeZoneInfo
-            .GetSystemTimeZones()
-            .Single(tz => tz.Id == "Eastern Standard Time" || tz.Id == "America/New_York");
-
-        private static readonly DateTime Epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
         /// <summary>
         /// Parse a string into a double.  Value of 0 if invalid data.
         /// </summary>
@@ -48,13 +42,13 @@ namespace Hilres.FinanceClient.YahooFinance
         /// <returns>Unix time stamp in string form.</returns>
         internal static string ToUnixTimestamp(this DateTime date) =>
             DateTime.SpecifyKind(date.FromEstToUtc(), DateTimeKind.Utc)
-                .Subtract(Epoch)
+                .Subtract(Constant.EpochDate)
                 .TotalSeconds
                 .ToString();
 
         private static DateTime FromEstToUtc(this DateTime date) =>
             DateTime.SpecifyKind(date, DateTimeKind.Unspecified)
-                .ToUtcFrom(EasternTimeZone);
+                .ToUtcFrom(Constant.EasternTimeZone);
 
         private static DateTime ToUtcFrom(this DateTime date, TimeZoneInfo timeZone) =>
             TimeZoneInfo.ConvertTimeToUtc(date, timeZone);

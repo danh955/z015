@@ -1,4 +1,4 @@
-﻿// <copyright file="StockPrice.cs" company="None">
+﻿// <copyright file="YahooPrice.cs" company="None">
 // Free and open source code.
 // </copyright>
 
@@ -17,5 +17,5 @@ namespace Hilres.FinanceClient.YahooFinance
     /// <param name="AdjClose">The adjusted closing price.</param>
     /// <param name="Volume">The volume traded.</param>
 
-    public record StockPrice(DateTime Date, double? Open, double? High, double? Low, double? Close, double? AdjClose, long? Volume);
+    public record YahooPrice(DateTime Date, double? Open, double? High, double? Low, double? Close, double? AdjClose, long? Volume);
 }

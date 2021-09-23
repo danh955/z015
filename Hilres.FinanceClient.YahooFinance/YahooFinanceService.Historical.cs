@@ -28,35 +28,43 @@ namespace Hilres.FinanceClient.YahooFinance
         /// <param name="interval">Stock price interval.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>Task with PriceListResult.</returns>
-        public async Task<IReadOnlyList<StockPrice>> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, StockInterval? interval, CancellationToken cancellationToken)
+        public async Task<(IReadOnlyList<YahooPrice> Prices, string ErrorMessage)> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken)
         {
             this.logger.LogDebug("GetStockPricesAsync symbol={0}, firstDate={1}, lastDate={2}, interval={3}", symbol, firstDate, lastDate, interval);
 
-            string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : "0";
-            string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Now.ToUnixTimestamp();
+            string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
+            string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
             string intervalString = ToIntervalString(interval);
 
             string uri = $"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={period1}&period2={period2}&interval={intervalString}&events=history&includeAdjustedClose=true";
 
-            return await this.GetItems(
+            return await this.GetCsvItems(
                                     uri: uri,
                                     cancellationToken: cancellationToken,
                                     createItem: (csv) =>
                                     {
-                                        return new StockPrice(
-                                                    Date: csv.GetField<DateTime>(0),
-                                                    Open: csv.GetDouble(1),
-                                                    High: csv.GetDouble(2),
-                                                    Low: csv.GetDouble(3),
-                                                    Close: csv.GetDouble(4),
-                                                    AdjClose: csv.GetDouble(5),
-                                                    Volume: csv.GetLong(6));
+                                        try
+                                        {
+                                            return new YahooPrice(
+                                                        Date: csv.GetField<DateTime>(0),
+                                                        Open: csv.GetDouble(1),
+                                                        High: csv.GetDouble(2),
+                                                        Low: csv.GetDouble(3),
+                                                        Close: csv.GetDouble(4),
+                                                        AdjClose: csv.GetDouble(5),
+                                                        Volume: csv.GetLong(6));
+                                        }
+                                        catch (FormatException e)
+                                        {
+                                            this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
+                                            throw;
+                                        }
                                     });
         }
 
-        private async Task<List<StockPrice>> GetItems(string uri, Func<CsvReader, StockPrice> createItem, CancellationToken cancellationToken)
+        private async Task<(List<YahooPrice> Prices, string ErrorMessage)> GetCsvItems(string uri, Func<CsvReader, YahooPrice> createItem, CancellationToken cancellationToken)
         {
-            List<StockPrice> items = new();
+            List<YahooPrice> items = new();
 
             var response = await this.httpClient.GetAsync(uri, cancellationToken).ConfigureAwait(false);
 
@@ -80,11 +88,17 @@ namespace Hilres.FinanceClient.YahooFinance
                     }
                 }
 
-                return items;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    this.logger.LogInformation($"{nameof(this.GetCsvItems)} canceled.");
+                    return (items, "Canceled");
+                }
+
+                return (items, null);
             }
 
-            this.logger.LogWarning("Failed HTTP status code: {0} - {1}\n  URL: {2}", response.StatusCode, response.ReasonPhrase, uri);
-            return null;
+            this.logger.LogWarning($"Failed HTTP status code: {response.StatusCode} - {response.ReasonPhrase}\n  URL: {uri}");
+            return (null, response.StatusCode.ToString());
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// <copyright file="StockInterval.cs" company="None">
+﻿// <copyright file="YahooInterval.cs" company="None">
 // Free and open source code.
 // </copyright>
 
@@ -7,7 +7,7 @@ namespace Hilres.FinanceClient.YahooFinance
     /// <summary>
     /// Yahoo stock price interval.
     /// </summary>
-    public enum StockInterval
+    public enum YahooInterval
     {
         /// <summary>
         /// Daily stock prices.  (1d).

@@ -31,13 +31,13 @@ namespace Hilres.FinanceClient.YahooFinance
         /// </summary>
         /// <param name="interval">StockInterval.</param>
         /// <returns>string.</returns>
-        public static string ToIntervalString(StockInterval? interval) => interval switch
+        public static string ToIntervalString(YahooInterval? interval) => interval switch
         {
             null => "1d",
-            StockInterval.Daily => "1d",
-            StockInterval.Weekly => "1wk",
-            StockInterval.Monthly => "1mo",
-            StockInterval.Quorterly => "3mo",
+            YahooInterval.Daily => "1d",
+            YahooInterval.Weekly => "1wk",
+            YahooInterval.Monthly => "1mo",
+            YahooInterval.Quorterly => "3mo",
             _ => throw new NotImplementedException(interval.ToString()),
         };
     }
