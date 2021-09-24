@@ -1,11 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\debug\Hilres.FinanceClient.YahooFinance.Test.xml</DocumentationFile>
+    <DocumentationFile>bin\debug\Hilres.FinanceClient.Yahoo.Test.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hilres.FinanceClient.YahooFinance\Hilres.FinanceClient.YahooFinance.csproj" />
+    <ProjectReference Include="..\Hilres.FinanceClient.Yahoo\Hilres.FinanceClient.Yahoo.csproj" />
   </ItemGroup>
 
 </Project>

@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hilres.FinanceClient.YahooFinance\Hilres.FinanceClient.YahooFinance.csproj" />
+    <ProjectReference Include="..\Hilres.FinanceClient.Yahoo\Hilres.FinanceClient.Yahoo.csproj" />
   </ItemGroup>
 
 </Project>

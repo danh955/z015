@@ -1,29 +1,29 @@
-﻿// <copyright file="YahooFinanceServiceHistoricalTest.cs" company="None">
+﻿// <copyright file="YahooServiceHistoricalTest.cs" company="None">
 // Free and open source code.
 // </copyright>
 
-namespace Hilres.FinanceClient.YahooFinance.Test
+namespace Hilres.FinanceClient.Yahoo.Test
 {
     using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Hilres.FinanceClient.YahooFinance;
+    using Hilres.FinanceClient.Yahoo;
     using Xunit;
     using Xunit.Abstractions;
 
     /// <summary>
     /// Yahoo finance service for historical test class.
     /// </summary>
-    public class YahooFinanceServiceHistoricalTest
+    public class YahooServiceHistoricalTest
     {
         private readonly ITestOutputHelper loggerHelper;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="YahooFinanceServiceHistoricalTest"/> class.
+        /// Initializes a new instance of the <see cref="YahooServiceHistoricalTest"/> class.
         /// </summary>
         /// <param name="loggerHelper">ITestOutputHelper.</param>
-        public YahooFinanceServiceHistoricalTest(ITestOutputHelper loggerHelper)
+        public YahooServiceHistoricalTest(ITestOutputHelper loggerHelper)
         {
             this.loggerHelper = loggerHelper;
         }
@@ -35,9 +35,9 @@ namespace Hilres.FinanceClient.YahooFinance.Test
         [Fact]
         public async Task GetStockPricesAsyncInvalidSymbolTest()
         {
-            var logger = this.loggerHelper.BuildLoggerFor<YahooFinanceService>();
+            var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
-            var service = new YahooFinanceService(logger);
+            var service = new YahooService(logger);
             var (prices, errorMessage) = await service.GetStockPricesAsync("QQQzzz", null, null, YahooInterval.Quorterly, CancellationToken.None);
 
             Assert.Null(prices);
@@ -51,9 +51,9 @@ namespace Hilres.FinanceClient.YahooFinance.Test
         [Fact]
         public async Task GetStockPricesAsyncNullDatesTest()
         {
-            var logger = this.loggerHelper.BuildLoggerFor<YahooFinanceService>();
+            var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
-            var service = new YahooFinanceService(logger);
+            var service = new YahooService(logger);
             var (prices, errorMessage) = await service.GetStockPricesAsync("QQQ", null, null, YahooInterval.Quorterly, CancellationToken.None);
 
             Assert.NotNull(prices);
@@ -76,9 +76,9 @@ namespace Hilres.FinanceClient.YahooFinance.Test
         [InlineData("QQQ", "10/1/2020", "3/14/2021", YahooInterval.Monthly, 6)]
         public async Task GetStockPricesAsyncTest(string symbol, string firstDate, string lastDate, YahooInterval interval, int count)
         {
-            var logger = this.loggerHelper.BuildLoggerFor<YahooFinanceService>();
+            var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
-            var service = new YahooFinanceService(logger);
+            var service = new YahooService(logger);
             var (prices, errorMessage) = await service.GetStockPricesAsync(symbol, DateTime.Parse(firstDate), DateTime.Parse(lastDate), interval, CancellationToken.None);
 
             Assert.NotNull(prices);

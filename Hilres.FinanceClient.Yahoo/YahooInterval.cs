@@ -2,7 +2,7 @@
 // Free and open source code.
 // </copyright>
 
-namespace Hilres.FinanceClient.YahooFinance
+namespace Hilres.FinanceClient.Yahoo
 {
     /// <summary>
     /// Yahoo stock price interval.

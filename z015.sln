@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z015.Repository", "Z015.Rep
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Z015.AppFeature", "Z015.AppFeature\Z015.AppFeature.csproj", "{90803518-8D38-4F97-891C-5AF75E86DF16}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.YahooFinance", "Hilres.FinanceClient.YahooFinance\Hilres.FinanceClient.YahooFinance.csproj", "{4F34B105-4194-4A3F-A699-A440E68AAEAA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.Yahoo", "Hilres.FinanceClient.Yahoo\Hilres.FinanceClient.Yahoo.csproj", "{4F34B105-4194-4A3F-A699-A440E68AAEAA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.YahooFinance.Test", "Hilres.FinanceClient.YahooFinance.Test\Hilres.FinanceClient.YahooFinance.Test.csproj", "{DCF27064-6C2B-4301-889E-9A765E0EE18E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hilres.FinanceClient.Yahoo.Test", "Hilres.FinanceClient.Yahoo.Test\Hilres.FinanceClient.Yahoo.Test.csproj", "{DCF27064-6C2B-4301-889E-9A765E0EE18E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppTest", "ConsoleAppTest\ConsoleAppTest.csproj", "{593D3D49-593A-4573-819E-2925F820AC63}"
 EndProject

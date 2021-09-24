@@ -1,8 +1,8 @@
-﻿// <copyright file="YahooFinanceService.Historical.cs" company="None">
+﻿// <copyright file="YahooService.Historical.cs" company="None">
 // Free and open source code.
 // </copyright>
 
-namespace Hilres.FinanceClient.YahooFinance
+namespace Hilres.FinanceClient.Yahoo
 {
     using System;
     using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace Hilres.FinanceClient.YahooFinance
     /// <summary>
     /// Yahoo finance service for historical data class.
     /// </summary>
-    public partial class YahooFinanceService
+    public partial class YahooService
     {
         /// <summary>
         /// Get stock history data from Yahoo.

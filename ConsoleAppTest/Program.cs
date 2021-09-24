@@ -4,7 +4,7 @@
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
-    using Hilres.FinanceClient.YahooFinance;
+    using Hilres.FinanceClient.Yahoo;
     using Microsoft.Extensions.Logging;
     using Serilog;
     using Serilog.Extensions.Logging;
@@ -21,12 +21,12 @@
                                 .CreateLogger();
 
             var loggerFactory = new SerilogLoggerFactory(log).AddSerilog();
-            ILogger<YahooFinanceService> logger = loggerFactory.CreateLogger<YahooFinanceService>();
+            ILogger<YahooService> logger = loggerFactory.CreateLogger<YahooService>();
 
             log.Information("Starting {0}", args);
 
             stopWatch.Start();
-            var service = new YahooFinanceService(logger);
+            var service = new YahooService(logger);
             var result1 = await service.GetStockPricesAsync("QQQ", new(2021, 3, 9), new(2021, 3, 14), YahooInterval.Daily, CancellationToken.None);
             var result2 = await service.GetStockPricesAsync("QQQ", new(2020, 12, 14), new(2021, 3, 14), YahooInterval.Weekly, CancellationToken.None);
             var result3 = await service.GetStockPricesAsync("QQQ", new(2020, 10, 1), new(2021, 3, 14), YahooInterval.Monthly, CancellationToken.None);
