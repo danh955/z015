@@ -1,40 +1,55 @@
 ﻿namespace ConsoleAppTest
 {
-    using System;
-    using System.Diagnostics;
-    using System.Threading;
     using System.Threading.Tasks;
+    using Hilres.FinanceClient.Tiingo;
     using Hilres.FinanceClient.Yahoo;
-    using Microsoft.Extensions.Logging;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
     using Serilog;
-    using Serilog.Extensions.Logging;
+    using Z015.Repository;
+    using Z015.Repository.UpdateBackground;
 
-    internal class Program
+    internal static class Program
     {
+        /// <summary>
+        /// Start of main program.
+        /// </summary>
+        /// <param name="args">Command line arguments.</param>
+        /// <returns>Task.</returns>
         private static async Task Main(string[] args)
         {
-            Stopwatch stopWatch = new();
+            await Host.CreateDefaultBuilder(args)
+                .ConfigureSerilog()
+                .ConfigureServices((hostContext, services) =>
+                {
+                    var connectionString = hostContext.Configuration.GetConnectionString("SqlDatabase");
 
-            using var log = new LoggerConfiguration()
-                                .MinimumLevel.Debug()
-                                .WriteTo.Console()
-                                .CreateLogger();
+                    services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString));
+                    services.AddTiingoService();
+                    services.AddYahooService();
+                    services.AddUpdateBackgroundService();
+                })
+                .RunConsoleAsync();
 
-            var loggerFactory = new SerilogLoggerFactory(log).AddSerilog();
-            ILogger<YahooService> logger = loggerFactory.CreateLogger<YahooService>();
+            Log.Information("Program exiting.");
+            Log.CloseAndFlush();
+        }
 
-            log.Information("Starting {0}", args);
+        private static IHostBuilder ConfigureSerilog(this IHostBuilder builder)
+        {
+            builder.ConfigureServices((context, services) =>
+                 {
+                     Log.Logger = new LoggerConfiguration()
+                                 .ReadFrom.Configuration(context.Configuration)
+                                 .CreateLogger();
+                 })
+                .UseSerilog();
 
-            stopWatch.Start();
-            var service = new YahooService(logger);
-            var result1 = await service.GetStockPricesAsync("QQQ", new(2021, 3, 9), new(2021, 3, 14), YahooInterval.Daily, CancellationToken.None);
-            var result2 = await service.GetStockPricesAsync("QQQ", new(2020, 12, 14), new(2021, 3, 14), YahooInterval.Weekly, CancellationToken.None);
-            var result3 = await service.GetStockPricesAsync("QQQ", new(2020, 10, 1), new(2021, 3, 14), YahooInterval.Monthly, CancellationToken.None);
-            stopWatch.Stop();
+            Log.Information("Program Starting.");
 
-            TimeSpan ts = stopWatch.Elapsed;
-            log.Information($"RunTime {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}");
-            ////log.Information($"RunTime {ts:H:mm:ss.ff}");
+            return builder;
         }
     }
 }

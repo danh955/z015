@@ -5,12 +5,13 @@
 namespace Hilres.FinanceClient.Tiingo
 {
     using System.Net.Http;
+    using Hilres.FinanceClient.Abstraction;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Tiingo finance service class.
     /// </summary>
-    public partial class TiingoService
+    public partial class TiingoService : ITiingoService
     {
         private readonly HttpClient httpClient;
         private readonly ILogger<TiingoService> logger;

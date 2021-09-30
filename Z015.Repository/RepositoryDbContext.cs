@@ -45,6 +45,16 @@ namespace Z015.Repository
         /// </summary>
         public DbSet<OrderEntity> Orders { get; set; }
 
+        /// <summary>
+        /// Gets or sets the stock table.
+        /// </summary>
+        public DbSet<StockEntity> Stocks { get; set; }
+
+        /// <summary>
+        /// Gets or sets the stock price table.
+        /// </summary>
+        public DbSet<StockPriceEntity> StockPrices { get; set; }
+
         /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

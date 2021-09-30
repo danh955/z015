@@ -2,7 +2,7 @@
 // Free and open source code.
 // </copyright>
 
-namespace Hilres.FinanceClient.Yahoo
+namespace Hilres.FinanceClient.Abstraction
 {
     using System;
 

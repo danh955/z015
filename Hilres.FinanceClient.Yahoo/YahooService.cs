@@ -6,12 +6,13 @@ namespace Hilres.FinanceClient.Yahoo
 {
     using System;
     using System.Net.Http;
+    using Hilres.FinanceClient.Abstraction;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Yahoo finance service class.
     /// </summary>
-    public partial class YahooService
+    public partial class YahooService : IYahooService
     {
         private readonly HttpClient httpClient;
         private readonly ILogger<YahooService> logger;
