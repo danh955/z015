@@ -5,7 +5,6 @@
 namespace Z015.Repository.UpdateBackground
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -61,7 +60,7 @@ namespace Z015.Repository.UpdateBackground
 
                 using var db = this.dbFactory.CreateDbContext();
                 var dbStocks = await db.Stocks.Select(s => s).ToListAsync(cancellationToken);
-                Dictionary<string, StockEntity> stocks = dbStocks.ToDictionary(s => s.Symbol);
+                var stocks = dbStocks.ToDictionary(s => new { s.Symbol, s.Exchange });
 
                 var sourceStocks = tiingoStocks
                                     .Where(d => d.Ticker.Trim().Length > 0
@@ -79,7 +78,7 @@ namespace Z015.Repository.UpdateBackground
                                         //// EndDate = d.Max(v => v.EndDate),
                                     });
 
-                var newStocks = sourceStocks.Where(d => !stocks.ContainsKey(d.Symbol.Trim().ToUpper()));
+                var newStocks = sourceStocks.Where(d => !stocks.ContainsKey(new { d.Symbol, d.Exchange }));
 
                 this.logger.LogInformation("Adding {0:#,##0} stock symbols.", newStocks.Count());
 
