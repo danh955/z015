@@ -19,7 +19,7 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.HasKey(p => p.Id);
             builder.Property(p => p.StockId).HasColumnName("StockId").IsRequired();
             builder.Property(p => p.Frequency).HasColumnName("Frequency").IsRequired();
-            builder.Property(p => p.Date).HasColumnName("Date").IsRequired();
+            builder.Property(p => p.Date).HasColumnName("Date").IsRequired().HasColumnType("date");
             builder.Property(p => p.Open).HasColumnName("Open");
             builder.Property(p => p.Low).HasColumnName("Low");
             builder.Property(p => p.High).HasColumnName("High");

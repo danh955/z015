@@ -18,6 +18,6 @@ namespace Hilres.FinanceClient.Abstraction
         /// </summary>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>List of supported stock tickers.  Successful if error message is null.</returns>
-        public Task<(IReadOnlyList<TiingoSupportedStockTicker> Stocks, string ErrorMessage)> GetSupportedTickersAsync(CancellationToken cancellationToken);
+        public Task<(IEnumerable<TiingoSupportedStockTicker> Stocks, string ErrorMessage)> GetSupportedTickersAsync(CancellationToken cancellationToken);
     }
 }

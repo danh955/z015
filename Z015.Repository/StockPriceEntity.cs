@@ -1,6 +1,7 @@
 ﻿// <copyright file="StockPriceEntity.cs" company="None">
 // Free and open source code.
 // </copyright>
+
 namespace Z015.Repository
 {
     using System;

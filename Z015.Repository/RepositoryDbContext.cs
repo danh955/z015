@@ -55,6 +55,11 @@ namespace Z015.Repository
         /// </summary>
         public DbSet<StockPriceEntity> StockPrices { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Tiingo supported stock tickers.
+        /// </summary>
+        public DbSet<TiingoSupportedTickerEntity> TiingoSupportedTickers { get; set; }
+
         /// <inheritdoc/>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
