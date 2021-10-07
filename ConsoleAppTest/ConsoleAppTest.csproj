@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Hilres.FinanceClient.Tiingo\Hilres.FinanceClient.Tiingo.csproj" />
     <ProjectReference Include="..\Hilres.FinanceClient.Yahoo\Hilres.FinanceClient.Yahoo.csproj" />
+    <ProjectReference Include="..\Z015.BackgroundTask\Z015.BackgroundTask.csproj" />
     <ProjectReference Include="..\Z015.Repository.UpdateBackground\Z015.Repository.UpdateBackground.csproj" />
     <ProjectReference Include="..\Z015.Repository\Z015.Repository.csproj" />
   </ItemGroup>

@@ -159,7 +159,7 @@ namespace Z015.Repository.UpdateBackground
 
             if (updateTickers.Any())
             {
-                this.logger.LogInformation("Updating {0:#,##0} tickers in {1} table.", updateTickers.Count(), nameof(db.TiingoSupportedTickers));
+                this.logger.LogInformation("Updating {0:#,##0} tickers in {1} table.", updateTickers.Count, nameof(db.TiingoSupportedTickers));
                 db.TiingoSupportedTickers.UpdateRange(updateTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }
@@ -186,8 +186,6 @@ namespace Z015.Repository.UpdateBackground
                 db.TiingoSupportedTickers.AddRange(newTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }
-
-            await Task.Delay(1, cancellationToken);
         }
     }
 }

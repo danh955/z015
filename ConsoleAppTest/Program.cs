@@ -8,6 +8,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Serilog;
+    using Z015.BackgroundTask;
     using Z015.Repository;
     using Z015.Repository.UpdateBackground;
 
@@ -30,6 +31,7 @@
                     services.AddTiingoService();
                     services.AddYahooService();
                     services.AddUpdateBackgroundService();
+                    services.AddBackgroundTaskService();
                 })
                 .RunConsoleAsync();
 

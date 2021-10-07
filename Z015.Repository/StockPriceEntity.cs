@@ -37,14 +37,14 @@ namespace Z015.Repository
         public double Open { get; set; }
 
         /// <summary>
-        /// Gets or sets the low price.
-        /// </summary>
-        public double Low { get; set; }
-
-        /// <summary>
         /// Gets or sets the high price.
         /// </summary>
         public double High { get; set; }
+
+        /// <summary>
+        /// Gets or sets the low price.
+        /// </summary>
+        public double Low { get; set; }
 
         /// <summary>
         /// Gets or sets the close price.
