@@ -19,17 +19,20 @@ namespace Z015.BackgroundTask
 
         private readonly ILogger<BackgroundTaskService> logger;
         private readonly UpdateStockPrices updateStockPrices;
+        private readonly UpdateStockSymbol updateStockSymbol;
         private DateTime nextMarketClosed = DateTime.MinValue;  // EST.
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BackgroundTaskService"/> class.
         /// </summary>
+        /// <param name="updateStockSymbol">UpdateStockSymbol.</param>
         /// <param name="updateStockPrices">UpdateStockPrices.</param>
         /// <param name="logger">ILogger.</param>
-        public BackgroundTaskService(UpdateStockPrices updateStockPrices, ILogger<BackgroundTaskService> logger)
+        public BackgroundTaskService(UpdateStockSymbol updateStockSymbol, UpdateStockPrices updateStockPrices, ILogger<BackgroundTaskService> logger)
         {
             this.logger = logger;
             this.updateStockPrices = updateStockPrices;
+            this.updateStockSymbol = updateStockSymbol;
         }
 
         private static DateTime EasternTimeNow => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.EasternTimeZone);
@@ -46,6 +49,7 @@ namespace Z015.BackgroundTask
             {
                 if (this.IsTimeToProcess())
                 {
+                    await this.updateStockSymbol.DoUpdateFromTiingo(cancellationToken);
                     canUpdateStockPrices = true;
                 }
 

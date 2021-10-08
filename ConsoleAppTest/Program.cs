@@ -1,8 +1,6 @@
 ﻿namespace ConsoleAppTest
 {
     using System.Threading.Tasks;
-    using Hilres.FinanceClient.Tiingo;
-    using Hilres.FinanceClient.Yahoo;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +8,6 @@
     using Serilog;
     using Z015.BackgroundTask;
     using Z015.Repository;
-    using Z015.Repository.UpdateBackground;
 
     internal static class Program
     {
@@ -28,9 +25,6 @@
                     var connectionString = hostContext.Configuration.GetConnectionString("SqlDatabase");
 
                     services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString));
-                    services.AddTiingoService();
-                    services.AddYahooService();
-                    services.AddUpdateBackgroundService();
                     services.AddBackgroundTaskService();
                 })
                 .RunConsoleAsync();

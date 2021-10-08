@@ -4,6 +4,8 @@
 
 namespace Z015.BackgroundTask
 {
+    using Hilres.FinanceClient.Tiingo;
+    using Hilres.FinanceClient.Yahoo;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -14,13 +16,16 @@ namespace Z015.BackgroundTask
         /// <summary>
         /// Add the background task service to the service collection.
         /// </summary>
-        /// <param name="service">IServiceCollection.</param>
+        /// <param name="services">IServiceCollection.</param>
         /// <returns>Updated IServiceCollection.</returns>
-        public static IServiceCollection AddBackgroundTaskService(this IServiceCollection service)
+        public static IServiceCollection AddBackgroundTaskService(this IServiceCollection services)
         {
-            service.AddSingleton<UpdateStockPrices>();
-            service.AddHostedService<BackgroundTaskService>();
-            return service;
+            services.AddTiingoService();
+            services.AddYahooService();
+            services.AddSingleton<UpdateStockSymbol>();
+            services.AddSingleton<UpdateStockPrices>();
+            services.AddHostedService<BackgroundTaskService>();
+            return services;
         }
     }
 }

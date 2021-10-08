@@ -1,8 +1,8 @@
-﻿// <copyright file="UpdateBackgroundSymbolsService.cs" company="None">
+﻿// <copyright file="UpdateStockSymbol.cs" company="None">
 // Free and open source code.
 // </copyright>
 
-namespace Z015.Repository.UpdateBackground
+namespace Z015.BackgroundTask
 {
     using System;
     using System.Collections.Generic;
@@ -18,20 +18,20 @@ namespace Z015.Repository.UpdateBackground
     /// <summary>
     /// Update the symbols in the database from the finance client data.
     /// </summary>
-    internal class UpdateBackgroundSymbolsService
+    public class UpdateStockSymbol
     {
         private static readonly string[] ExchangeList = { "NASDAQ", "NYSE" };
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
-        private readonly ILogger<UpdateBackgroundSymbolsService> logger;
+        private readonly ILogger<UpdateStockSymbol> logger;
         private readonly ITiingoService tiingo;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UpdateBackgroundSymbolsService"/> class.
+        /// Initializes a new instance of the <see cref="UpdateStockSymbol"/> class.
         /// </summary>
         /// <param name="tiingo">ITiingoService.</param>
         /// <param name="dbFactory">IDbContextFactory for RepositoryDbContext.</param>
         /// <param name="logger">ILogger.</param>
-        public UpdateBackgroundSymbolsService(ITiingoService tiingo, IDbContextFactory<RepositoryDbContext> dbFactory, ILogger<UpdateBackgroundSymbolsService> logger)
+        public UpdateStockSymbol(ITiingoService tiingo, IDbContextFactory<RepositoryDbContext> dbFactory, ILogger<UpdateStockSymbol> logger)
         {
             this.logger = logger;
             this.tiingo = tiingo;
@@ -45,7 +45,7 @@ namespace Z015.Repository.UpdateBackground
         /// <returns>Task.</returns>
         internal async Task DoUpdateFromTiingo(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateBackgroundSymbolsService), nameof(this.DoUpdateFromTiingo));
+            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingo));
 
             try
             {
@@ -74,7 +74,7 @@ namespace Z015.Repository.UpdateBackground
         /// <returns>Task.</returns>
         private async Task UpdateStockSymbolTable(IEnumerable<TiingoSupportedStockTicker> tiingoStocks, CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateBackgroundSymbolsService), nameof(this.UpdateStockSymbolTable));
+            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.UpdateStockSymbolTable));
 
             // Any stock ending before the cut off date will not be considered.
             DateTime cutOffDate = DateTime.Today.AddDays(-7);
@@ -113,7 +113,7 @@ namespace Z015.Repository.UpdateBackground
         /// <returns>Task.</returns>
         private async Task UpdateSupportedTickerTable(IEnumerable<TiingoSupportedStockTicker> tiingoStocks, CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateBackgroundSymbolsService), nameof(this.UpdateSupportedTickerTable));
+            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.UpdateSupportedTickerTable));
 
             using var db = this.dbFactory.CreateDbContext();
             var dbTickerDictionary = await db.TiingoSupportedTickers.ToDictionaryAsync(t => new { t.Ticker, t.Exchange, t.StartDate }, cancellationToken);
