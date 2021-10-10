@@ -1,5 +1,6 @@
 ﻿namespace ConsoleAppTest
 {
+    using System;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
@@ -18,19 +19,28 @@
         /// <returns>Task.</returns>
         private static async Task Main(string[] args)
         {
-            await Host.CreateDefaultBuilder(args)
-                .ConfigureSerilog()
-                .ConfigureServices((hostContext, services) =>
-                {
-                    var connectionString = hostContext.Configuration.GetConnectionString("SqlDatabase");
+            try
+            {
+                await Host.CreateDefaultBuilder(args)
+                    .ConfigureSerilog()
+                    .ConfigureServices((hostContext, services) =>
+                    {
+                        var connectionString = hostContext.Configuration.GetConnectionString("SqlDatabase");
 
-                    services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString));
-                    services.AddBackgroundTaskService();
-                })
-                .RunConsoleAsync();
-
-            Log.Information("Program exiting.");
-            Log.CloseAndFlush();
+                        services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString));
+                        services.AddBackgroundTaskService(hostContext.Configuration);
+                    })
+                    .RunConsoleAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Fatal error.");
+            }
+            finally
+            {
+                Log.Information("Program exiting.");
+                Log.CloseAndFlush();
+            }
         }
 
         private static IHostBuilder ConfigureSerilog(this IHostBuilder builder)

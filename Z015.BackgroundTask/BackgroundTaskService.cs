@@ -9,6 +9,8 @@ namespace Z015.BackgroundTask
     using System.Threading.Tasks;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
+    using Z015.Repository;
 
     /// <summary>
     /// Background task service class.
@@ -20,19 +22,32 @@ namespace Z015.BackgroundTask
         private readonly ILogger<BackgroundTaskService> logger;
         private readonly UpdateStockPrices updateStockPrices;
         private readonly UpdateStockSymbol updateStockSymbol;
-        private DateTime nextMarketClosed = DateTime.MinValue;  // EST.
+        private DateTime nextMarketClosed = DateTime.MinValue; // EST.
+
+        private BackgroundTaskOptions options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BackgroundTaskService"/> class.
         /// </summary>
+        /// <param name="optionMonitor">BackgroundTaskOptions.</param>
         /// <param name="updateStockSymbol">UpdateStockSymbol.</param>
         /// <param name="updateStockPrices">UpdateStockPrices.</param>
         /// <param name="logger">ILogger.</param>
-        public BackgroundTaskService(UpdateStockSymbol updateStockSymbol, UpdateStockPrices updateStockPrices, ILogger<BackgroundTaskService> logger)
+        public BackgroundTaskService(
+            IOptionsMonitor<BackgroundTaskOptions> optionMonitor,
+            UpdateStockSymbol updateStockSymbol,
+            UpdateStockPrices updateStockPrices,
+            ILogger<BackgroundTaskService> logger)
         {
-            this.logger = logger;
-            this.updateStockPrices = updateStockPrices;
+            this.options = optionMonitor.CurrentValue;
             this.updateStockSymbol = updateStockSymbol;
+            this.updateStockPrices = updateStockPrices;
+            this.logger = logger;
+
+            optionMonitor.OnChange(newValue =>
+            {
+                this.options = newValue;
+            });
         }
 
         private static DateTime EasternTimeNow => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.EasternTimeZone);
@@ -55,7 +70,7 @@ namespace Z015.BackgroundTask
 
                 if (canUpdateStockPrices)
                 {
-                    canUpdateStockPrices = !(await this.updateStockPrices.DoUpdate(cancellationToken));
+                    canUpdateStockPrices = !(await this.updateStockPrices.DoUpdate(StockFrequency.Monthly, new(2020, 1, 1), cancellationToken));
                 }
 
                 this.logger.LogInformation("Tick");

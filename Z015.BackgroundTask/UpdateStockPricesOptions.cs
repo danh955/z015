@@ -41,7 +41,9 @@ namespace Z015.BackgroundTask
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"{this.Symbol}, {this.Frequency}, {this.FirstDate}, {this.LastDate}";
+            string firstDate = this.FirstDate.HasValue ? this.FirstDate.Value.ToShortDateString() : "null";
+            string lastDate = this.LastDate.HasValue ? this.LastDate.Value.ToShortDateString() : "null";
+            return $"{this.Symbol}, {this.Frequency}, {firstDate}, {lastDate}";
         }
     }
 }

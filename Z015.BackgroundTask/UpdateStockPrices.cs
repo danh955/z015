@@ -4,6 +4,7 @@
 
 namespace Z015.BackgroundTask
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -41,27 +42,49 @@ namespace Z015.BackgroundTask
         /// <summary>
         /// Do the stock price update.
         /// </summary>
+        /// <param name="frequency">tThe frequency of the stock price.</param>
+        /// <param name="firstDate">The first date of stock prices to get.  Null for max.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>True if process has started.  False try again later.</returns>
-        internal async Task<bool> DoUpdate(CancellationToken cancellationToken)
+        internal async Task<bool> DoUpdate(StockFrequency frequency, DateTime firstDate, CancellationToken cancellationToken)
         {
             if (this.actionBlock.InputCount > 0)
             {
                 return false;
             }
 
-            var options = new UpdateStockPricesOptions()
-            {
-                Symbol = "QQQ",
-                Frequency = StockFrequency.Monthly,
-                FirstDate = new(2020, 1, 1),
-                LastDate = null,
-                CancellationToken = cancellationToken,
-            };
+            var symbols = await this.GetListOfSymbols(cancellationToken);
 
-            this.logger.LogInformation("Queuing {0}", options);
-            await this.actionBlock.SendAsync(options, cancellationToken);
+            this.logger.LogInformation("Queuing symbols.  Count: {0:#,##0}", symbols.Count());
+            foreach (string symbol in symbols)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var options = new UpdateStockPricesOptions()
+                {
+                    Symbol = symbol,
+                    Frequency = frequency,
+                    FirstDate = firstDate,
+                    LastDate = null,
+                    CancellationToken = cancellationToken,
+                };
+
+                this.logger.LogDebug("Queuing {0}", options);
+                await this.actionBlock.SendAsync(options, cancellationToken);
+            }
+
+            this.logger.LogInformation("Queuing symbols finished.");
+
             return true;
+        }
+
+        private async Task<IEnumerable<string>> GetListOfSymbols(CancellationToken cancellationToken)
+        {
+            var db = this.dbFactory.CreateDbContext();
+            return await db.Stocks.Select(s => s.Symbol).ToListAsync(cancellationToken);
         }
 
         /// <summary>
@@ -72,7 +95,12 @@ namespace Z015.BackgroundTask
         /// <returns>Task.</returns>
         private async Task UpdatePriceWorker(UpdateStockPricesOptions options)
         {
-            this.logger.LogInformation("Updating prices for {0}", options);
+            if (options.CancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            this.logger.LogInformation("Processing update for {0}", options);
 
             using var db = this.dbFactory.CreateDbContext();
             var stockId = await db.Stocks
@@ -89,11 +117,14 @@ namespace Z015.BackgroundTask
             var (rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken);
             if (errorMessage != null)
             {
+                //// TODO: if starts with "Unauthorized" get new yahoo cookie
+                //// TODO: If starts with "NotFound", mark it as invalid symbol.
+
                 this.logger.LogWarning("{0}.{1} error: {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
                 return;
             }
 
-            this.logger.LogInformation("Retrieved {0} prices", rawPrices?.Count);
+            this.logger.LogDebug("Retrieved {0} prices", rawPrices?.Count);
 
             var yahooDictionary = rawPrices
                                     .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
@@ -126,13 +157,13 @@ namespace Z015.BackgroundTask
 
             if (deletePrices.Any())
             {
-                this.logger.LogInformation("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
+                this.logger.LogDebug("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
                 db.StockPrices.RemoveRange(deletePrices);
                 await db.SaveChangesAsync(options.CancellationToken);
             }
             else
             {
-                this.logger.LogInformation("No deletions");
+                this.logger.LogDebug("No deletions");
             }
 
             //// Update existing stock prices.
@@ -155,13 +186,13 @@ namespace Z015.BackgroundTask
 
             if (updatePrices.Any())
             {
-                this.logger.LogInformation("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
+                this.logger.LogDebug("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
                 db.StockPrices.UpdateRange(updatePrices);
                 await db.SaveChangesAsync(options.CancellationToken);
             }
             else
             {
-                this.logger.LogInformation("No updates");
+                this.logger.LogDebug("No updates");
             }
 
             //// Add new stock prices.
@@ -171,13 +202,13 @@ namespace Z015.BackgroundTask
 
             if (newPricess.Any())
             {
-                this.logger.LogInformation("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
+                this.logger.LogDebug("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
                 db.StockPrices.AddRange(newPricess);
                 await db.SaveChangesAsync(options.CancellationToken);
             }
             else
             {
-                this.logger.LogInformation("No additions");
+                this.logger.LogDebug("No additions");
             }
         }
     }
