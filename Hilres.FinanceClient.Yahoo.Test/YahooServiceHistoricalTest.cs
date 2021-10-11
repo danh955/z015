@@ -39,8 +39,9 @@ namespace Hilres.FinanceClient.Yahoo.Test
             var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
             var service = new YahooService(logger);
-            var (prices, errorMessage) = await service.GetStockPricesAsync("QQQzzz", null, null, YahooInterval.Quorterly, CancellationToken.None);
+            var (isSuccessful, prices, errorMessage) = await service.GetStockPricesAsync("QQQzzz", null, null, YahooInterval.Quorterly, CancellationToken.None);
 
+            Assert.False(isSuccessful);
             Assert.Null(prices);
             Assert.Equal("NotFound", errorMessage);
         }
@@ -55,8 +56,9 @@ namespace Hilres.FinanceClient.Yahoo.Test
             var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
             var service = new YahooService(logger);
-            var (prices, errorMessage) = await service.GetStockPricesAsync("QQQ", null, null, YahooInterval.Quorterly, CancellationToken.None);
+            var (isSuccessful, prices, errorMessage) = await service.GetStockPricesAsync("QQQ", null, null, YahooInterval.Quorterly, CancellationToken.None);
 
+            Assert.True(isSuccessful);
             Assert.NotNull(prices);
             Assert.Null(errorMessage);
             Assert.True(prices.Any());
@@ -80,8 +82,9 @@ namespace Hilres.FinanceClient.Yahoo.Test
             var logger = this.loggerHelper.BuildLoggerFor<YahooService>();
 
             var service = new YahooService(logger);
-            var (prices, errorMessage) = await service.GetStockPricesAsync(symbol, DateTime.Parse(firstDate), DateTime.Parse(lastDate), interval, CancellationToken.None);
+            var (isSuccessful, prices, errorMessage) = await service.GetStockPricesAsync(symbol, DateTime.Parse(firstDate), DateTime.Parse(lastDate), interval, CancellationToken.None);
 
+            Assert.True(isSuccessful);
             Assert.NotNull(prices);
             Assert.Null(errorMessage);
             Assert.True(prices.Any());

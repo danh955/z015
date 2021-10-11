@@ -70,10 +70,11 @@ namespace Z015.BackgroundTask
 
                 if (canUpdateStockPrices)
                 {
-                    canUpdateStockPrices = !(await this.updateStockPrices.DoUpdate(StockFrequency.Monthly, new(2020, 1, 1), cancellationToken));
+                    bool hasStarted = await this.updateStockPrices.DoUpdateAsync(StockFrequency.Monthly, new(2020, 1, 1), cancellationToken).ConfigureAwait(false);
+                    canUpdateStockPrices = !hasStarted;
                 }
 
-                this.logger.LogInformation("Tick");
+                this.logger.LogInformation("Tick  count: {0:#,##0}", this.updateStockPrices.InputCount);
                 await Task.Delay(TickDelay * 60 * 1000, cancellationToken);
             }
 

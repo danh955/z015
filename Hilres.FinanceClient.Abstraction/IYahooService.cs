@@ -23,6 +23,14 @@ namespace Hilres.FinanceClient.Abstraction
         /// <param name="interval">Stock price interval.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>Task with PriceListResult.</returns>
-        public Task<(IReadOnlyList<YahooPrice> Prices, string ErrorMessage)> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken);
+        public Task<PriceListResult> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken);
     }
+
+    /// <summary>
+    /// Price list result.
+    /// </summary>
+    /// <param name="IsSuccessful">True if successful.</param>
+    /// <param name="Prices">List of prices.</param>
+    /// <param name="ErrorMessage">Error message.</param>
+    public record PriceListResult(bool IsSuccessful, List<YahooPrice> Prices, string ErrorMessage);
 }

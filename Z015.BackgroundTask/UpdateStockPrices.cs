@@ -7,6 +7,7 @@ namespace Z015.BackgroundTask
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Threading.Tasks.Dataflow;
@@ -25,6 +26,8 @@ namespace Z015.BackgroundTask
         private readonly ILogger<UpdateStockPrices> logger;
         private readonly IYahooService yahoo;
 
+        private int count = 0;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="UpdateStockPrices"/> class.
         /// </summary>
@@ -36,8 +39,14 @@ namespace Z015.BackgroundTask
             this.yahoo = yahoo;
             this.dbFactory = dbFactory;
             this.logger = logger;
-            this.actionBlock = new(this.UpdatePriceWorker);
+            this.actionBlock = new(this.UpdatePriceWorker, new() { BoundedCapacity = -1 });
         }
+
+        /// <summary>
+        /// Gets how many items are in the input count.
+        /// </summary>
+        /// <returns>Number of items in the input queue.</returns>
+        internal int InputCount => this.actionBlock.InputCount;
 
         /// <summary>
         /// Do the stock price update.
@@ -46,7 +55,7 @@ namespace Z015.BackgroundTask
         /// <param name="firstDate">The first date of stock prices to get.  Null for max.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>True if process has started.  False try again later.</returns>
-        internal async Task<bool> DoUpdate(StockFrequency frequency, DateTime firstDate, CancellationToken cancellationToken)
+        internal async Task<bool> DoUpdateAsync(StockFrequency frequency, DateTime firstDate, CancellationToken cancellationToken)
         {
             if (this.actionBlock.InputCount > 0)
             {
@@ -73,7 +82,12 @@ namespace Z015.BackgroundTask
                 };
 
                 this.logger.LogDebug("Queuing {0}", options);
-                await this.actionBlock.SendAsync(options, cancellationToken);
+                var isAccepted = await this.actionBlock.SendAsync(options, cancellationToken).ConfigureAwait(false);
+
+                if (!isAccepted)
+                {
+                    this.logger.LogWarning("Queuing not accepted {0}", options);
+                }
             }
 
             this.logger.LogInformation("Queuing symbols finished.");
@@ -84,7 +98,7 @@ namespace Z015.BackgroundTask
         private async Task<IEnumerable<string>> GetListOfSymbols(CancellationToken cancellationToken)
         {
             var db = this.dbFactory.CreateDbContext();
-            return await db.Stocks.Select(s => s.Symbol).ToListAsync(cancellationToken);
+            return await db.Stocks.Select(s => s.Symbol).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -95,18 +109,21 @@ namespace Z015.BackgroundTask
         /// <returns>Task.</returns>
         private async Task UpdatePriceWorker(UpdateStockPricesOptions options)
         {
+            //// await Task.Delay(100, options.CancellationToken);
+            this.count++;
+            this.logger.LogInformation("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
+
             if (options.CancellationToken.IsCancellationRequested)
             {
+                this.logger.LogInformation("UpdatePriceWorker has been canceled.  {0}", options.Symbol);
                 return;
             }
-
-            this.logger.LogInformation("Processing update for {0}", options);
 
             using var db = this.dbFactory.CreateDbContext();
             var stockId = await db.Stocks
                             .Where(s => s.Symbol == options.Symbol)
                             .Select(s => s.Id)
-                            .FirstOrDefaultAsync(options.CancellationToken);
+                            .FirstOrDefaultAsync(options.CancellationToken).ConfigureAwait(false);
 
             if (stockId == 0)
             {
@@ -114,11 +131,14 @@ namespace Z015.BackgroundTask
                 return;
             }
 
-            var (rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken);
-            if (errorMessage != null)
+            var (isSuccessful, rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken).ConfigureAwait(false);
+            if (!isSuccessful)
             {
-                //// TODO: if starts with "Unauthorized" get new yahoo cookie
-                //// TODO: If starts with "NotFound", mark it as invalid symbol.
+                if (errorMessage == HttpStatusCode.NotFound.ToString())
+                {
+                    //// TODO: If starts with "NotFound", mark it as invalid symbol.
+                    return;
+                }
 
                 this.logger.LogWarning("{0}.{1} error: {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
                 return;
@@ -148,7 +168,7 @@ namespace Z015.BackgroundTask
             var dbDictionary = await db.StockPrices
                                     .Where(s => s.StockId == stockId)
                                     .Select(s => s)
-                                    .ToDictionaryAsync(t => t.Date, options.CancellationToken);
+                                    .ToDictionaryAsync(t => t.Date, options.CancellationToken).ConfigureAwait(false);
 
             //// Delete stock prices.
 
@@ -159,7 +179,7 @@ namespace Z015.BackgroundTask
             {
                 this.logger.LogDebug("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
                 db.StockPrices.RemoveRange(deletePrices);
-                await db.SaveChangesAsync(options.CancellationToken);
+                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -188,7 +208,7 @@ namespace Z015.BackgroundTask
             {
                 this.logger.LogDebug("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
                 db.StockPrices.UpdateRange(updatePrices);
-                await db.SaveChangesAsync(options.CancellationToken);
+                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -204,7 +224,7 @@ namespace Z015.BackgroundTask
             {
                 this.logger.LogDebug("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
                 db.StockPrices.AddRange(newPricess);
-                await db.SaveChangesAsync(options.CancellationToken);
+                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
             else
             {
