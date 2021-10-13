@@ -51,21 +51,29 @@ namespace Z015.BackgroundTask
         /// <summary>
         /// Do the stock price update.
         /// </summary>
-        /// <param name="frequency">tThe frequency of the stock price.</param>
+        /// <param name="frequency">The frequency of the stock price.</param>
         /// <param name="firstDate">The first date of stock prices to get.  Null for max.</param>
+        /// <param name="cutOffDate">Get stock where the PriceUpdatedDate is less then the cutOffDate.</param>
+        /// <param name="takeCount">Only get this many.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
-        /// <returns>True if process has started.  False try again later.</returns>
-        internal async Task<bool> DoUpdateAsync(StockFrequency frequency, DateTime firstDate, CancellationToken cancellationToken)
+        /// <returns>True if no more to process.  False need to process more.</returns>
+        internal async Task<bool> DoUpdateAsync(StockFrequency frequency, DateTime firstDate, DateTimeOffset cutOffDate, int takeCount, CancellationToken cancellationToken)
         {
             if (this.actionBlock.InputCount > 0)
             {
+                // The queue is not empty.
                 return false;
             }
 
-            var symbols = await this.GetListOfSymbols(cancellationToken);
+            var symbols = await this.GetListOfSymbols(cutOffDate, takeCount, cancellationToken);
+            if (!symbols.Any())
+            {
+                // No more to process. All done.
+                return true;
+            }
 
             this.logger.LogInformation("Queuing symbols.  Count: {0:#,##0}", symbols.Count());
-            foreach (string symbol in symbols)
+            foreach (var (stockId, symbol) in symbols)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -74,6 +82,7 @@ namespace Z015.BackgroundTask
 
                 var options = new UpdateStockPricesOptions()
                 {
+                    StockId = stockId,
                     Symbol = symbol,
                     Frequency = frequency,
                     FirstDate = firstDate,
@@ -86,19 +95,23 @@ namespace Z015.BackgroundTask
 
                 if (!isAccepted)
                 {
-                    this.logger.LogWarning("Queuing not accepted {0}", options);
+                    this.logger.LogWarning("ActionBlock rejecting new items. {0}", options);
                 }
             }
 
-            this.logger.LogInformation("Queuing symbols finished.");
-
-            return true;
+            // There will be more to process.
+            return false;
         }
 
-        private async Task<IEnumerable<string>> GetListOfSymbols(CancellationToken cancellationToken)
+        private async Task<IEnumerable<Tuple<int, string>>> GetListOfSymbols(DateTimeOffset cutOffDate, int takeCount, CancellationToken cancellationToken)
         {
             var db = this.dbFactory.CreateDbContext();
-            return await db.Stocks.Select(s => s.Symbol).ToListAsync(cancellationToken).ConfigureAwait(false);
+            return await db.Stocks
+                .Where(s => s.PriceUpdatedDate == null || s.PriceUpdatedDate < cutOffDate)
+                .OrderBy(s => s.PriceUpdatedDate)
+                .Take(takeCount)
+                .Select(s => Tuple.Create(s.Id, s.Symbol))
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -109,126 +122,140 @@ namespace Z015.BackgroundTask
         /// <returns>Task.</returns>
         private async Task UpdatePriceWorker(UpdateStockPricesOptions options)
         {
-            //// await Task.Delay(100, options.CancellationToken);
-            this.count++;
-            this.logger.LogInformation("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
-
-            if (options.CancellationToken.IsCancellationRequested)
+            try
             {
-                this.logger.LogInformation("UpdatePriceWorker has been canceled.  {0}", options.Symbol);
-                return;
-            }
+                this.count++;
+                this.logger.LogInformation("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
 
-            using var db = this.dbFactory.CreateDbContext();
-            var stockId = await db.Stocks
-                            .Where(s => s.Symbol == options.Symbol)
-                            .Select(s => s.Id)
-                            .FirstOrDefaultAsync(options.CancellationToken).ConfigureAwait(false);
-
-            if (stockId == 0)
-            {
-                this.logger.LogWarning("Symbol {0} not found in {1} table.", options.Symbol, nameof(db.Stocks));
-                return;
-            }
-
-            var (isSuccessful, rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken).ConfigureAwait(false);
-            if (!isSuccessful)
-            {
-                if (errorMessage == HttpStatusCode.NotFound.ToString())
+                if (options.CancellationToken.IsCancellationRequested)
                 {
-                    //// TODO: If starts with "NotFound", mark it as invalid symbol.
+                    this.logger.LogInformation("UpdatePriceWorker has been canceled.  {0}", options.Symbol);
                     return;
                 }
 
-                this.logger.LogWarning("{0}.{1} error: {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
-                return;
-            }
+                using var db = this.dbFactory.CreateDbContext();
 
-            this.logger.LogDebug("Retrieved {0} prices", rawPrices?.Count);
-
-            var yahooDictionary = rawPrices
-                                    .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
-                                    .Select(y =>
-                                    {
-                                        double adjust = 1 + ((y.AdjClose.Value - y.Close.Value) / y.Close.Value);
-                                        return new StockPriceEntity
-                                        {
-                                            StockId = stockId,
-                                            Frequency = StockFrequency.Monthly,
-                                            Date = y.Date,
-                                            Open = y.Open.Value * adjust,
-                                            High = y.High.Value * adjust,
-                                            Low = y.Low.Value * adjust,
-                                            Close = y.AdjClose.Value,
-                                            Volume = y.Volume.Value,
-                                        };
-                                    })
-                                    .ToDictionary(p => p.Date);
-
-            var dbDictionary = await db.StockPrices
-                                    .Where(s => s.StockId == stockId)
-                                    .Select(s => s)
-                                    .ToDictionaryAsync(t => t.Date, options.CancellationToken).ConfigureAwait(false);
-
-            //// Delete stock prices.
-
-            var deletePrices = dbDictionary.Values
-                                .Where(d => !yahooDictionary.ContainsKey(d.Date));
-
-            if (deletePrices.Any())
-            {
-                this.logger.LogDebug("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
-                db.StockPrices.RemoveRange(deletePrices);
-                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                this.logger.LogDebug("No deletions");
-            }
-
-            //// Update existing stock prices.
-
-            var updatePrices = new List<StockPriceEntity>();
-            foreach (var dbPrice in dbDictionary.Values)
-            {
-                if (yahooDictionary.TryGetValue(dbPrice.Date, out StockPriceEntity yPrice))
+                var (isSuccessful, rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken).ConfigureAwait(false);
+                if (!isSuccessful)
                 {
-                    if (dbPrice.Open != yPrice.Open
-                        || dbPrice.High != yPrice.High
-                        || dbPrice.Low != yPrice.Low
-                        || dbPrice.Close != yPrice.Close
-                        || dbPrice.Volume != yPrice.Volume)
+                    if (errorMessage == HttpStatusCode.NotFound.ToString())
                     {
-                        updatePrices.Add(dbPrice);
+                        // Mark it as not found and try it again in the far future.
+                        DateTimeOffset nextTryDate = DateTimeOffset.Now.AddDays(5 + (DateTime.Now.Ticks % 30));
+                        var notFoundStock = await db.Stocks
+                                            .Where(s => s.Id == options.StockId)
+                                            .SingleAsync(options.CancellationToken);
+                        notFoundStock.IsSymbolNotFound = true;
+                        notFoundStock.PriceUpdatedDate = nextTryDate;
+                        await db.SaveChangesAsync(options.CancellationToken);
+                        this.logger.LogInformation("{0} not found.  Next try on {1}", options.Symbol, nextTryDate);
+                        return;
+                    }
+
+                    this.logger.LogWarning("{0}.{1} error: {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
+                    return;
+                }
+
+                this.logger.LogDebug("Retrieved {0} prices", rawPrices?.Count);
+
+                var yahooDictionary = rawPrices
+                        .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
+                        .GroupBy(y => y.Date) // remove duplicates.
+                        .Select(yy =>
+                        {
+                            var y = yy.OrderByDescending(y => y.Volume).First();
+                            double adjust = 1 + ((y.AdjClose.Value - y.Close.Value) / y.Close.Value);
+                            return new StockPriceEntity
+                            {
+                                StockId = options.StockId,
+                                Frequency = options.Frequency,
+                                Date = y.Date,
+                                Open = y.Open.Value * adjust,
+                                High = y.High.Value * adjust,
+                                Low = y.Low.Value * adjust,
+                                Close = y.AdjClose.Value,
+                                Volume = y.Volume.Value,
+                            };
+                        })
+                        .ToDictionary(p => p.Date);
+
+                var dbDictionary = await db.StockPrices
+                                        .Where(s => s.StockId == options.StockId)
+                                        .Select(s => s)
+                                        .ToDictionaryAsync(t => t.Date, options.CancellationToken).ConfigureAwait(false);
+
+                //// Delete stock prices.
+
+                var deletePrices = dbDictionary.Values
+                                    .Where(d => !yahooDictionary.ContainsKey(d.Date));
+
+                if (deletePrices.Any())
+                {
+                    this.logger.LogDebug("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
+                    db.StockPrices.RemoveRange(deletePrices);
+                    await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    this.logger.LogDebug("No deletions");
+                }
+
+                //// Update existing stock prices.
+
+                var updatePrices = new List<StockPriceEntity>();
+                foreach (var dbPrice in dbDictionary.Values)
+                {
+                    if (yahooDictionary.TryGetValue(dbPrice.Date, out StockPriceEntity yPrice))
+                    {
+                        if (dbPrice.Open != yPrice.Open
+                            || dbPrice.High != yPrice.High
+                            || dbPrice.Low != yPrice.Low
+                            || dbPrice.Close != yPrice.Close
+                            || dbPrice.Volume != yPrice.Volume)
+                        {
+                            updatePrices.Add(dbPrice);
+                        }
                     }
                 }
-            }
 
-            if (updatePrices.Any())
-            {
-                this.logger.LogDebug("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
-                db.StockPrices.UpdateRange(updatePrices);
-                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                this.logger.LogDebug("No updates");
-            }
+                if (updatePrices.Any())
+                {
+                    this.logger.LogDebug("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
+                    db.StockPrices.UpdateRange(updatePrices);
+                    await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    this.logger.LogDebug("No updates");
+                }
 
-            //// Add new stock prices.
+                //// Add new stock prices.
 
-            var newPricess = yahooDictionary.Values
-                            .Where(y => !dbDictionary.ContainsKey(y.Date));
+                var newPricess = yahooDictionary.Values
+                                .Where(y => !dbDictionary.ContainsKey(y.Date));
 
-            if (newPricess.Any())
-            {
-                this.logger.LogDebug("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
-                db.StockPrices.AddRange(newPricess);
-                await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
+                if (newPricess.Any())
+                {
+                    this.logger.LogDebug("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
+                    db.StockPrices.AddRange(newPricess);
+                    await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    this.logger.LogDebug("No additions");
+                }
+
+                // Say we are done updating this stock.
+                var stock = await db.Stocks
+                                .Where(s => s.Id == options.StockId)
+                                .SingleAsync(options.CancellationToken);
+                stock.IsSymbolNotFound = false;
+                stock.PriceUpdatedDate = DateTimeOffset.Now;
+                await db.SaveChangesAsync(options.CancellationToken);
             }
-            else
+            catch (Exception e)
             {
-                this.logger.LogDebug("No additions");
+                this.logger.LogError(e, "{0}.{1} {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), options);
             }
         }
     }

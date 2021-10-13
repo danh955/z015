@@ -43,9 +43,9 @@ namespace Z015.BackgroundTask
         /// </summary>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>Task.</returns>
-        internal async Task DoUpdateFromTiingo(CancellationToken cancellationToken)
+        internal async Task DoUpdateFromTiingoAsync(CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingo));
+            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingoAsync));
 
             try
             {

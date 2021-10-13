@@ -23,8 +23,8 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.Property(p => p.PriceCurrency).HasColumnName("PriceCurrency");
             builder.Property(p => p.StartDate).HasColumnName("StartDate").HasColumnType("date");
             builder.Property(p => p.EndDate).HasColumnName("EndDate").HasColumnType("date");
-            builder.Property(p => p.DateAdded).HasColumnName("DateAdded").IsRequired();
-            builder.Property(p => p.DateUpdated).HasColumnName("DateUpdated").IsRequired();
+            builder.Property(p => p.DateAdded).HasColumnName("DateAdded").IsRequired().HasColumnType("datetime2(2)");
+            builder.Property(p => p.DateUpdated).HasColumnName("DateUpdated").IsRequired().HasColumnType("datetime2(2)");
         }
     }
 }

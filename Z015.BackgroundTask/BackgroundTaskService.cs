@@ -5,8 +5,10 @@
 namespace Z015.BackgroundTask
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
@@ -19,10 +21,12 @@ namespace Z015.BackgroundTask
     {
         private const int TickDelay = 1; // minutes.
 
+        private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
         private readonly ILogger<BackgroundTaskService> logger;
         private readonly UpdateStockPrices updateStockPrices;
         private readonly UpdateStockSymbol updateStockSymbol;
-        private DateTime nextMarketClosed = DateTime.MinValue; // EST.
+        private DateTimeOffset lastMarketClosed;
+        private DateTimeOffset nextMarketClosed;
 
         private BackgroundTaskOptions options;
 
@@ -32,72 +36,94 @@ namespace Z015.BackgroundTask
         /// <param name="optionMonitor">BackgroundTaskOptions.</param>
         /// <param name="updateStockSymbol">UpdateStockSymbol.</param>
         /// <param name="updateStockPrices">UpdateStockPrices.</param>
+        /// <param name="dbFactory">IDbContextFactory for RepositoryDbContext.</param>
         /// <param name="logger">ILogger.</param>
         public BackgroundTaskService(
             IOptionsMonitor<BackgroundTaskOptions> optionMonitor,
             UpdateStockSymbol updateStockSymbol,
             UpdateStockPrices updateStockPrices,
+            IDbContextFactory<RepositoryDbContext> dbFactory,
             ILogger<BackgroundTaskService> logger)
         {
             this.options = optionMonitor.CurrentValue;
             this.updateStockSymbol = updateStockSymbol;
             this.updateStockPrices = updateStockPrices;
+            this.dbFactory = dbFactory;
             this.logger = logger;
 
             optionMonitor.OnChange(newValue =>
             {
                 this.options = newValue;
             });
+
+            this.lastMarketClosed = GetLastMarketClosedTime(EasternTimeNow);
+            this.nextMarketClosed = this.lastMarketClosed;
         }
 
-        private static DateTime EasternTimeNow => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Constant.EasternTimeZone);
+        private static DateTimeOffset EasternTimeNow => TimeZoneInfo.ConvertTime(DateTimeOffset.Now, Constant.EasternTimeZone);
 
         /// <inheritdoc/>
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await Task.Delay(5 * 1000, cancellationToken);
-            this.logger.LogInformation("Starting {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
-
-            bool canUpdateStockPrices = false;
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                if (this.IsTimeToProcess())
-                {
-                    await this.updateStockSymbol.DoUpdateFromTiingo(cancellationToken);
-                    canUpdateStockPrices = true;
-                }
+                await Task.Delay(5 * 1000, cancellationToken);
+                this.logger.LogInformation("Starting {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
 
-                if (canUpdateStockPrices)
-                {
-                    bool hasStarted = await this.updateStockPrices.DoUpdateAsync(StockFrequency.Monthly, new(2020, 1, 1), cancellationToken).ConfigureAwait(false);
-                    canUpdateStockPrices = !hasStarted;
-                }
+                bool canUpdateStockPrices = false;
 
-                this.logger.LogInformation("Tick  count: {0:#,##0}", this.updateStockPrices.InputCount);
-                await Task.Delay(TickDelay * 60 * 1000, cancellationToken);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    if (await this.IsTimeToProcessAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        await this.updateStockSymbol.DoUpdateFromTiingoAsync(cancellationToken).ConfigureAwait(false);
+                        canUpdateStockPrices = true;
+                    }
+
+                    if (canUpdateStockPrices)
+                    {
+                        bool hasFinished = await this.updateStockPrices.DoUpdateAsync(
+                                                        frequency: StockFrequency.Monthly,
+                                                        firstDate: new(2020, 1, 1),
+                                                        cutOffDate: this.lastMarketClosed,
+                                                        takeCount: 100,
+                                                        cancellationToken: cancellationToken).ConfigureAwait(false);
+                        canUpdateStockPrices = !hasFinished;
+                    }
+
+                    this.logger.LogInformation("Tick");
+                    await Task.Delay(TickDelay * 60 * 1000, cancellationToken);
+                }
             }
-
-            this.logger.LogInformation("Ending {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+            catch (Exception e)
+            {
+                this.logger.LogError(e, "Error {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+            }
+            finally
+            {
+                this.logger.LogInformation("Ending {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+            }
         }
 
         /// <summary>
-        /// Get the market closed time.
+        /// Get the last time the market has closed.
         /// </summary>
-        /// <param name="currentEasternTime">DateTime.</param>
-        /// <returns>The last time the market closed.</returns>
-        private static DateTime GetLastMarketClosedTime(DateTime currentEasternTime)
+        /// <param name="date">DateTimeOffset.</param>
+        /// <returns>The last time the market has closed.</returns>
+        private static DateTimeOffset GetLastMarketClosedTime(DateTimeOffset date)
         {
-            return (currentEasternTime - Constant.MarketClosedTime).Date + Constant.MarketClosedTime;
+            DateTimeOffset easternTime = TimeZoneInfo.ConvertTime(date, Constant.EasternTimeZone);
+            return new DateTimeOffset(easternTime.Subtract(Constant.MarketClosedTime).Date, easternTime.Offset)
+                .Add(Constant.MarketClosedTime);
         }
 
         /// <summary>
         /// Check if its time to processing.
         /// </summary>
         /// <returns>True if its time to process.</returns>
-        private bool IsTimeToProcess()
+        private async Task<bool> IsTimeToProcessAsync(CancellationToken cancellationToken)
         {
-            DateTime currentEasternTime = EasternTimeNow;
+            DateTimeOffset currentEasternTime = EasternTimeNow;
 
             // Is it time to do updates?
             if (currentEasternTime < this.nextMarketClosed.AddMinutes(30))
@@ -105,10 +131,21 @@ namespace Z015.BackgroundTask
                 return false;
             }
 
-            var lastMarketClosed = GetLastMarketClosedTime(currentEasternTime);
+            this.lastMarketClosed = GetLastMarketClosedTime(currentEasternTime);
+
+            using var db = this.dbFactory.CreateDbContext();
+            DateTimeOffset? oldestDate = await db.Stocks
+                .Select(s => s.PriceUpdatedDate ?? DateTimeOffset.MinValue)
+                .MinAsync(cancellationToken).ConfigureAwait(false);
+
+            if (oldestDate != null && oldestDate > this.lastMarketClosed)
+            {
+                this.nextMarketClosed = this.lastMarketClosed.AddDays(1);
+                return false;
+            }
 
             // Set the next market closed time to the next day.
-            this.nextMarketClosed = lastMarketClosed.AddDays(1);  // EST.
+            this.nextMarketClosed = this.lastMarketClosed.AddDays(1);
             this.logger.LogInformation("currentEasternTime = {0}, nextMarketClosed = {1} EST", currentEasternTime, this.nextMarketClosed);
 
             return true;

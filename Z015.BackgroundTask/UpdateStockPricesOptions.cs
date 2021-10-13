@@ -14,6 +14,11 @@ namespace Z015.BackgroundTask
     internal class UpdateStockPricesOptions
     {
         /// <summary>
+        /// Gets or sets the Stock Id of the symbol.
+        /// </summary>
+        public int StockId { get; set; }
+
+        /// <summary>
         /// Gets or sets the symbol to update.
         /// </summary>
         public string Symbol { get; set; }

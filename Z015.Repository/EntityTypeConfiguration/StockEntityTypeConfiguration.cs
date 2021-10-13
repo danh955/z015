@@ -20,9 +20,12 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.Property(s => s.Symbol).HasColumnName("Symbol").IsRequired();
             builder.Property(s => s.Name).HasColumnName("Name");
             builder.Property(s => s.Exchange).HasColumnName("Exchange");
+            builder.Property(s => s.PriceUpdatedDate).HasColumnName("PriceUpdatedDate").HasColumnType("datetimeoffset(2)");
+            builder.Property(s => s.IsSymbolNotFound).HasColumnName("IsSymbolNotFound");
 
             builder.HasIndex(s => new { s.Symbol });
             builder.HasIndex(s => new { s.Exchange, s.Symbol }).IsUnique();
+            builder.HasIndex(s => new { s.PriceUpdatedDate });
         }
     }
 }
