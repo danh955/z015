@@ -69,7 +69,12 @@ namespace Hilres.FinanceClient.Yahoo
                                             catch (FormatException e)
                                             {
                                                 this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
-                                                throw;
+                                                return null;
+                                            }
+                                            catch (BadDataException e)
+                                            {
+                                                this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
+                                                return null;
                                             }
                                         });
 

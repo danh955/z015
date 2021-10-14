@@ -84,9 +84,9 @@ namespace Z015.BackgroundTask
                     {
                         bool hasFinished = await this.updateStockPrices.DoUpdateAsync(
                                                         frequency: StockFrequency.Monthly,
-                                                        firstDate: new(2020, 1, 1),
+                                                        firstDate: new(2010, 1, 1),
                                                         cutOffDate: this.lastMarketClosed,
-                                                        takeCount: 100,
+                                                        takeCount: 128,
                                                         cancellationToken: cancellationToken).ConfigureAwait(false);
                         canUpdateStockPrices = !hasFinished;
                     }
