@@ -1,0 +1,28 @@
+﻿@if (resultTable != null)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                @foreach (var year in resultTable.Header.Reverse())
+                {
+                    <th>@year</th>
+                }
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in resultTable.Rows.Take(100))
+            {
+                <tr>
+                    <td>@item.Symbol</td>
+                    @foreach (var percentage in item.Percentages.Reverse())
+                    {
+                        <td>@percentage?.ToString("P1")</td>
+                    }
+                    <td>@item.Score</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
