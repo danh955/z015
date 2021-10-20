@@ -86,7 +86,7 @@ namespace Z015.BackgroundTask
                                                         frequency: StockFrequency.Monthly,
                                                         firstDate: new(2000, 1, 1),
                                                         cutOffDate: this.lastMarketClosed,
-                                                        takeCount: 128,
+                                                        takeCount: int.MaxValue,
                                                         cancellationToken: cancellationToken).ConfigureAwait(false);
                         canUpdateStockPrices = !hasFinished;
                     }

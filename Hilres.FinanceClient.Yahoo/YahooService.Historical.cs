@@ -21,8 +21,17 @@ namespace Hilres.FinanceClient.Yahoo
     /// </summary>
     public partial class YahooService
     {
-        private const int CrumbResetInterval = 5;  // Minutes.
         private DateTime nextCrumbTime = DateTime.MinValue;
+
+        /// <summary>
+        /// Gets or sets the interval time between resetting the cookie crumb in minutes.
+        /// </summary>
+        public int CrumbResetInterval { get; set; } = 5;
+
+        /// <summary>
+        /// Gets or sets the delay between API request to Yahoo in milliseconds.
+        /// </summary>
+        public int RequestDelay { get; set; } = 250;
 
         /// <summary>
         /// Get stock history data from Yahoo.
@@ -35,7 +44,7 @@ namespace Hilres.FinanceClient.Yahoo
         /// <returns>Task with PriceListResult.</returns>
         public async Task<PriceListResult> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken)
         {
-            await Task.Delay(200, cancellationToken);  // Keep it slow.
+            await Task.Delay(this.RequestDelay, cancellationToken);  // Keep it slow.
             this.logger.LogDebug("GetStockPricesAsync symbol={0}, firstDate={1}, lastDate={2}, interval={3}", symbol, firstDate, lastDate, interval);
 
             string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
@@ -44,7 +53,7 @@ namespace Hilres.FinanceClient.Yahoo
 
             if (this.nextCrumbTime < DateTime.Now || this.crumb == null)
             {
-                this.nextCrumbTime = DateTime.Now.AddMinutes(CrumbResetInterval);
+                this.nextCrumbTime = DateTime.Now.AddMinutes(this.CrumbResetInterval);
                 await this.RefreshCookieAndCrumbAsync(cancellationToken);
             }
 

@@ -125,7 +125,7 @@ namespace Z015.BackgroundTask
             try
             {
                 this.count++;
-                this.logger.LogInformation("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
+                this.logger.LogDebug("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
 
                 if (options.CancellationToken.IsCancellationRequested)
                 {
@@ -156,7 +156,7 @@ namespace Z015.BackgroundTask
                     return;
                 }
 
-                this.logger.LogDebug("Retrieved {0} prices", rawPrices?.Count);
+                this.logger.LogInformation("({0}, {1}) Retrieved {2,5:#,##0} {3}", this.actionBlock.InputCount, this.count, rawPrices?.Count, options);
 
                 var yahooDictionary = rawPrices
                         .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
