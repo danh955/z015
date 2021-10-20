@@ -5,7 +5,7 @@
 namespace Hilres.FinanceClient.Yahoo
 {
     using System;
-    using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Text.RegularExpressions;
@@ -19,11 +19,12 @@ namespace Hilres.FinanceClient.Yahoo
     /// </summary>
     public partial class YahooService : IYahooService
     {
+        private readonly HttpClient crumbHttpClient;
         private readonly HttpClient httpClient;
         private readonly ILogger<YahooService> logger;
 
         private readonly Regex regexCrumb = new(
-                                    "CrumbStore\":{\"crumb\":\"(?<crumb>.+?)\"}",
+                                    "\"CrumbStore\":{\"crumb\":\"(?<crumb>.+?)\"}",
                                     RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         private string crumb;
@@ -34,8 +35,14 @@ namespace Hilres.FinanceClient.Yahoo
         /// <param name="logger">ILogger.</param>
         public YahooService(ILogger<YahooService> logger)
         {
+            const string UserAgent = "user-agent";
+            const string UserAgentText = "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11";
+
             this.logger = logger;
-            this.httpClient = new();
+            this.httpClient = new(); // With Set-Cookie.
+            this.httpClient.DefaultRequestHeaders.Add(UserAgent, UserAgentText);
+            this.crumbHttpClient = new();  // No Set-Cookie.
+            this.crumbHttpClient.DefaultRequestHeaders.Add(UserAgent, UserAgentText);
         }
 
         /// <summary>
@@ -56,109 +63,70 @@ namespace Hilres.FinanceClient.Yahoo
         /// <summary>
         /// Get the cookie and crumb value.
         /// </summary>
-        /// <param name="symbol">Stock ticker symbol.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>True if successful.</returns>
-        public async Task RefreshCookieAndCrumbAsync(string symbol, CancellationToken cancellationToken)
+        public async Task RefreshCookieAndCrumbAsync(CancellationToken cancellationToken)
         {
-            int tryCount = 5;
-            var (cookie, crumb) = await this.TryGetCookieAndCrumbAsync(symbol);
+            const int maxTryCount = 5;
+            int tryCount = 0;
 
-            while (cookie == null && !cancellationToken.IsCancellationRequested && tryCount > 0)
+            var (cookie, crumb) = await this.TryGetCookieAndCrumbAsync();
+
+            while (crumb == null && !cancellationToken.IsCancellationRequested && tryCount < maxTryCount)
             {
                 await Task.Delay(1000, cancellationToken);
-                (cookie, crumb) = await this.TryGetCookieAndCrumbAsync(symbol);
-                tryCount--;
+                (cookie, crumb) = await this.TryGetCookieAndCrumbAsync();
+                tryCount++;
             }
 
-            this.logger.LogInformation("Got the cookie. tryCount = {0}", tryCount);
+            this.logger.LogInformation("Got cookie. tryCount = {0}, Crumb = {1}, Cookie = {2}", tryCount, crumb, cookie);
             this.httpClient.DefaultRequestHeaders.Add(HttpRequestHeader.Cookie.ToString(), cookie);
             this.crumb = crumb;
+        }
+
+        private static string GetCookie(HttpResponseMessage responseMessage, string cookieName)
+        {
+            var keyValue = responseMessage.Headers.SingleOrDefault(h => h.Key == cookieName);
+            return keyValue.Value?.SingleOrDefault();
         }
 
         /// <summary>
         /// Try to get the cookie and crumb value.
         /// </summary>
-        /// <param name="symbol">Stock ticker symbol.</param>
-        /// <returns>(cookie, crumb) if successful.  Otherwise (null, null).</returns>
-        private async Task<(string Cookie, string Crumb)> TryGetCookieAndCrumbAsync(string symbol)
+        /// <returns>(cookie, crumb) if successful.  Otherwise (null, null) or (cookie, null).</returns>
+        private async Task<(string Cookie, string Crumb)> TryGetCookieAndCrumbAsync()
         {
-            this.logger.LogDebug("TryGetCookieAndCrumbAsync");
+            const string uri = "https://finance.yahoo.com/quote/%5EGSPC";
 
-            try
+            var response = await this.crumbHttpClient.GetAsync(uri);
+            if (response.IsSuccessStatusCode)
             {
-                var url = $"https://finance.yahoo.com/quote/{symbol}?p={symbol}";
-
-                var request = (HttpWebRequest)WebRequest.Create(url);
-                request.CookieContainer = new CookieContainer();
-                request.Method = "GET";
-
-                using var response = (HttpWebResponse)await request.GetResponseAsync().ConfigureAwait(false);
-                using var stream = response.GetResponseStream();
-                string html = await new StreamReader(stream).ReadToEndAsync().ConfigureAwait(false);
-
-                if (html.Length < 5000)
+                var cookie = GetCookie(response, "Set-Cookie");
+                if (string.IsNullOrEmpty(cookie))
                 {
+                    this.logger.LogWarning("{0}  Cookie not found", nameof(this.TryGetCookieAndCrumbAsync));
                     return (null, null);
                 }
 
-                var crumb = this.ParseCrumb(html);
-                var cookie = response.GetResponseHeader("Set-Cookie").Split(';')[0];
-
-                if (cookie != null && crumb != null)
+                var html = await response.Content.ReadAsStringAsync();
+                var matches = this.regexCrumb.Matches(html);
+                if (matches.Count != 1)
                 {
-                    this.logger.LogDebug("Cookie: '{1}', Crumb: '{0}'", cookie, crumb);
-                    return (cookie, crumb);
-                }
-
-                if (html.Contains("No results for"))
-                {
-                    this.logger.LogDebug("Cookie: '{1}', Crumb: Invalid symbol", cookie);
+                    this.logger.LogWarning("{0}  Crumb not found", nameof(this.TryGetCookieAndCrumbAsync));
                     return (cookie, null);
                 }
-            }
-            catch (Exception e)
-            {
-                this.logger.LogWarning(e.Message);
+
+                var crumb = matches[0].Groups["crumb"]?.Value?.Replace("\\u002F", "/");
+                if (string.IsNullOrWhiteSpace(crumb))
+                {
+                    this.logger.LogWarning("{0}  Crumb is empty", nameof(this.TryGetCookieAndCrumbAsync));
+                    return (cookie, null);
+                }
+
+                return (cookie, crumb);
             }
 
             return (null, null);
-        }
-
-        /// <summary>
-        /// Get crumb value from HTML.
-        /// </summary>
-        /// <param name="html">HTML code.</param>
-        /// <returns>Crumb.</returns>
-        private string ParseCrumb(string html)
-        {
-            string crumb = null;
-
-            try
-            {
-                var matches = this.regexCrumb.Matches(html);
-
-                if (matches.Count > 0)
-                {
-                    crumb = matches[0].Groups["crumb"].Value;
-
-                    // fixed Unicode character 'SOLIDUS'
-                    if (crumb.Length != 11)
-                    {
-                        crumb = crumb.Replace("\\u002F", "/");
-                    }
-                }
-                else
-                {
-                    this.logger.LogWarning("RegEx no match");
-                }
-            }
-            catch (Exception e)
-            {
-                this.logger.LogWarning(e, e.Message);
-            }
-
-            return crumb;
         }
     }
 }

@@ -21,6 +21,9 @@ namespace Hilres.FinanceClient.Yahoo
     /// </summary>
     public partial class YahooService
     {
+        private const int CrumbResetInterval = 5;  // Minutes.
+        private DateTime nextCrumbTime = DateTime.MinValue;
+
         /// <summary>
         /// Get stock history data from Yahoo.
         /// </summary>
@@ -32,15 +35,17 @@ namespace Hilres.FinanceClient.Yahoo
         /// <returns>Task with PriceListResult.</returns>
         public async Task<PriceListResult> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken)
         {
+            await Task.Delay(200, cancellationToken);  // Keep it slow.
             this.logger.LogDebug("GetStockPricesAsync symbol={0}, firstDate={1}, lastDate={2}, interval={3}", symbol, firstDate, lastDate, interval);
 
             string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
             string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
             string intervalString = ToIntervalString(interval);
 
-            if (this.crumb == null)
+            if (this.nextCrumbTime < DateTime.Now || this.crumb == null)
             {
-                await this.RefreshCookieAndCrumbAsync(symbol, cancellationToken);
+                this.nextCrumbTime = DateTime.Now.AddMinutes(CrumbResetInterval);
+                await this.RefreshCookieAndCrumbAsync(cancellationToken);
             }
 
             PriceListResult result = null;
@@ -83,7 +88,7 @@ namespace Hilres.FinanceClient.Yahoo
                     return result;
                 }
 
-                await this.RefreshCookieAndCrumbAsync(symbol, cancellationToken);
+                await this.RefreshCookieAndCrumbAsync(cancellationToken);
                 tryCount--;
             }
 
@@ -118,7 +123,7 @@ namespace Hilres.FinanceClient.Yahoo
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    this.logger.LogInformation($"{nameof(this.GetCsvItems)} canceled.");
+                    this.logger.LogDebug($"{nameof(this.GetCsvItems)} canceled.");
                     return new(false, items, "Canceled");
                 }
 
