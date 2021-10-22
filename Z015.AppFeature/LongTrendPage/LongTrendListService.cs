@@ -57,6 +57,8 @@ namespace Z015.AppFeature.LongTrendPage
                                 o => o.Id,
                                 i => i.StockId,
                                 (o, i) => new { o.Symbol, i.Date, i.Close })
+                            .GroupBy(k => new { k.Symbol, k.Date }) //// Sometimes the symbol is on both exchanges.
+                            .Select(g => new { g.Key.Symbol, g.Key.Date, Close = g.Average(i => i.Close) })
                             .OrderBy(v => v.Symbol).ThenBy(v => v.Date)
                             .ToListAsync();
 

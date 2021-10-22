@@ -4,8 +4,12 @@
 
 namespace Z015.Website
 {
+    using System;
+    using System.Threading.Tasks;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
+    using Serilog;
 
     /// <summary>
     /// Main program class.
@@ -16,21 +20,43 @@ namespace Z015.Website
         /// Main program starts here.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        /// <returns>Task.</returns>
+        public static async Task Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            SetupSerilog();
+            Log.Information("Program Started.");
+
+            try
+            {
+                await Host.CreateDefaultBuilder(args)
+                    .UseSerilog()
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseStartup<Startup>();
+                    })
+                    .Build()
+                    .RunAsync();
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Fatal error.");
+            }
+            finally
+            {
+                Log.Information("Program Ended.");
+                Log.CloseAndFlush();
+            }
         }
 
-        /// <summary>
-        /// Create host builder.
-        /// </summary>
-        /// <param name="args">Command line arguments.</param>
-        /// <returns>IHostBuilder.</returns>
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
+        private static void SetupSerilog()
+        {
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false, true)
+                .Build();
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .CreateLogger();
+        }
     }
 }
