@@ -21,31 +21,6 @@ namespace Z015.Repository
         }
 
         /// <summary>
-        /// Gets or sets the user table.
-        /// </summary>
-        public DbSet<UserEntity> Users { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user table.
-        /// </summary>
-        public DbSet<PortfolioEntity> Portfolios { get; set; }
-
-        /// <summary>
-        /// Gets or sets the closed positions table.
-        /// </summary>
-        public DbSet<ClosePositionEntity> ClosePositions { get; set; }
-
-        /// <summary>
-        /// Gets or sets the open positions table.
-        /// </summary>
-        public DbSet<OpenPositionEntity> OpenPositions { get; set; }
-
-        /// <summary>
-        /// Gets or sets the orders table.
-        /// </summary>
-        public DbSet<OrderEntity> Orders { get; set; }
-
-        /// <summary>
         /// Gets or sets the stock table.
         /// </summary>
         public DbSet<StockEntity> Stocks { get; set; }

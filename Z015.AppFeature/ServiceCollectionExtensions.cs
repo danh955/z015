@@ -6,7 +6,6 @@ namespace Z015.AppFeature
 {
     using Microsoft.Extensions.DependencyInjection;
     using Z015.AppFeature.LongTrendPage;
-    using Z015.AppFeature.PortfolioPage;
 
     /// <summary>
     /// Service collection extensions class.
@@ -21,7 +20,6 @@ namespace Z015.AppFeature
         public static IServiceCollection AddAppFeatureService(this IServiceCollection service)
         {
             service.AddTransient<LongTrendListService>();
-            service.AddTransient<OpenPositionListService>();
             return service;
         }
     }
