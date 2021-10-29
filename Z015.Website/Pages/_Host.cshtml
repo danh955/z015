@@ -9,14 +9,16 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    @*<link rel="icon" href="path/to/fav.png">*@
     <title>Z015.Website</title>
     <base href="~/" />
-    <link href="css/ListlessNavigation.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/halfmoon-variables.min.css" rel="stylesheet" />
     <link href="Z015.Website.styles.css" rel="stylesheet" />
+    <link href="css/site.css" rel="stylesheet" />
 </head>
-<body>
+<body data-dm-shortcut-enabled="true" data-set-preferred-mode-onload="true">
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
     <div id="blazor-error-ui">
@@ -31,5 +33,6 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
+    <script src="js/halfmoon.min.js"></script>
 </body>
 </html>

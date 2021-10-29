@@ -27,5 +27,16 @@ namespace Z015.Website.Feature.LongTrendPage
             this.resultTable = await this.Service.GetLongTrends(10);
             await base.OnInitializedAsync();
         }
+
+        private static string UpDownColor(double? percentage)
+        {
+            return percentage switch
+            {
+                null => string.Empty,
+                _ when percentage > 0 => "up",
+                _ when percentage < 0 => "down",
+                _ => string.Empty,
+            };
+        }
     }
 }

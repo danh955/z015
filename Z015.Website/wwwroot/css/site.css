@@ -1,48 +1,34 @@
 :root {
-    --mainHeader-size: 40px;
+    --table-padding: 0.4rem 0.7rem;
 }
 
-/* ----- Reset ----- */
-
-* {
-    box-sizing: border-box;
-    border-spacing: 0rem;
+.LongTrendTable.table {
+    width: auto;
+    cursor: default;
 }
 
-html, body {
-    font-size: 24px;
-    margin: 0px;
-    padding: 0px;
-    /*    height: 100vh;
-    width: 100vw;
-    overflow-x: auto;
-    overflow-y: auto;
-*/
+.LongTrendTable td, .LongTrendTable th {
+    text-align: right;
 }
 
-a, button, select, summary {
-    cursor: pointer;
-}
-
-/* ----- Main Layout ----- */
-
-body > header {
-    position: fixed;
-    top: 0;
-    height: var(--mainHeader-size);
-    width: 100%;
-    background-color: #f5fff6;
-    border-bottom: 1px solid #e6e6e6;
-    padding-left: 1rem;
-}
-
-    body > header + div {
-        height: 0;
-        margin-bottom: var(--mainHeader-size);
+    .LongTrendTable td:first-child, .LongTrendTable th:first-child {
+        text-align: left;
     }
 
-body > main {
-    margin: 0.3rem;
+    .LongTrendTable td.up {
+        background-color: #eeffee;
+    }
+
+    .LongTrendTable td.down {
+        background-color: #ffeeee;
+    }
+
+.dark-mode .LongTrendTable td.up {
+    background-color: #112217;
+}
+
+.dark-mode .LongTrendTable td.down {
+    background-color: #221417;
 }
 
 #blazor-error-ui {

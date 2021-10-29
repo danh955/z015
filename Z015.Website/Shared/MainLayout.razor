@@ -1,5 +1,8 @@
-﻿@inherits LayoutComponentBase
-<MainHeader />
-<main>
-    @Body
-</main>
+﻿@inherits LayoutComponentBase;
+<div class="page-wrapper with-navbar">
+    <div class="sticky-alerts"></div>
+    <MainNav />
+    <main class="content-wrapper px-10">
+        @Body
+    </main>
+</div>

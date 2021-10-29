@@ -1,6 +1,6 @@
 ﻿@if (resultTable != null)
 {
-    <table>
+    <table class="LongTrendTable table table-inner-bordered table-hover">
         <thead>
             <tr>
                 <th>Symbol</th>
@@ -18,7 +18,7 @@
                     <td>@item.Symbol</td>
                     @foreach (var percentage in item.Percentages.Reverse())
                     {
-                        <td>@percentage?.ToString("P1")</td>
+                        <td class="@UpDownColor(percentage)">@percentage?.ToString("P1")</td>
                     }
                     <td>@item.Score</td>
                 </tr>
