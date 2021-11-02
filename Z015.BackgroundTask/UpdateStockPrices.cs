@@ -87,7 +87,7 @@ namespace Z015.BackgroundTask
                     Symbol = symbol,
                     Frequency = frequency,
                     FirstDate = firstDate,
-                    LastDate = null,
+                    LastDate = cutOffDate.Date,
                     CancellationToken = cancellationToken,
                 };
 

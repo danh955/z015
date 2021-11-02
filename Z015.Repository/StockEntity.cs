@@ -31,9 +31,19 @@ namespace Z015.Repository
         public string Exchange { get; set; }
 
         /// <summary>
+        /// Gets or sets the asset type.
+        /// </summary>
+        public string AssetType { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the symbol was not found.
         /// </summary>
         public bool IsSymbolNotFound { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this is to be deleted.
+        /// </summary>
+        public bool ToBeDeleted { get; set; }
 
         /// <summary>
         /// Gets or sets list of stock prices.

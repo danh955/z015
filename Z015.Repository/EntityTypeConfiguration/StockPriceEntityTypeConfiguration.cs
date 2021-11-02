@@ -25,7 +25,6 @@ namespace Z015.Repository.EntityTypeConfiguration
             builder.Property(p => p.High).HasColumnName("High");
             builder.Property(p => p.Close).HasColumnName("Close");
             builder.Property(p => p.Volume).HasColumnName("Volume");
-            builder.Property(p => p.ToBeDeleted).HasColumnName("ToBeDeleted");
 
             builder.HasIndex(p => new { p.StockId, p.Frequency, p.Date }).IsUnique();
 

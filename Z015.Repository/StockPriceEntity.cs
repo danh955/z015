@@ -57,11 +57,6 @@ namespace Z015.Repository
         public double Volume { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this is to be deleted.
-        /// </summary>
-        public bool ToBeDeleted { get; set; }
-
-        /// <summary>
         /// Gets or sets stock.
         /// </summary>
         public StockEntity Stock { get; set; }

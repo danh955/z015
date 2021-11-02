@@ -108,6 +108,7 @@ namespace Z015.BackgroundTask
                                     Symbol = d.Key.Symbol,
                                     Name = d.Key.Symbol,
                                     Exchange = d.Key.Exchange,
+                                    AssetType = d.Max(v => v.AssetType),
                                     //// StartDate = d.Min(v => v.StartDate),
                                     //// EndDate = d.Max(v => v.EndDate),
                                 });

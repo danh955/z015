@@ -21,7 +21,7 @@ namespace Z015.BackgroundTask
         private const StockFrequency DefaultStockFrequency = StockFrequency.Monthly;
         private const int FirstYearOfData = 2000;
         private const int DelayAfterCloseMinutes = 30;
-        private const int TickDelayMinutes = 1; // minutes.
+        private const int TickDelayMinutes = 5; // minutes.
 
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
         private readonly ILogger<BackgroundTaskService> logger;
