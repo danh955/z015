@@ -5,7 +5,6 @@
 namespace Z015.BackgroundTask
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
@@ -67,14 +66,14 @@ namespace Z015.BackgroundTask
         {
             try
             {
-                await Task.Delay(5 * 1000, cancellationToken);
+                await Task.Delay(5 * 1000, cancellationToken).ConfigureAwait(false);
                 this.logger.LogInformation("Starting {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
 
                 bool canUpdateStockPrices = false;
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (await this.IsTimeToProcessAsync(cancellationToken).ConfigureAwait(false))
+                    if (await this.IsTimeToProcessAsync(StockFrequency.Monthly, cancellationToken).ConfigureAwait(false))
                     {
                         await this.updateStockSymbol.DoUpdateFromTiingoAsync(cancellationToken).ConfigureAwait(false);
                         canUpdateStockPrices = true;
@@ -92,7 +91,7 @@ namespace Z015.BackgroundTask
                     }
 
                     this.logger.LogInformation("Tick");
-                    await Task.Delay(TickDelay * 60 * 1000, cancellationToken);
+                    await Task.Delay(TickDelay * 60 * 1000, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -121,30 +120,22 @@ namespace Z015.BackgroundTask
         /// Check if its time to processing.
         /// </summary>
         /// <returns>True if its time to process.</returns>
-        private async Task<bool> IsTimeToProcessAsync(CancellationToken cancellationToken)
+        private async Task<bool> IsTimeToProcessAsync(StockFrequency frequency, CancellationToken cancellationToken)
         {
             DateTimeOffset currentEasternTime = EasternTimeNow;
 
-            // Is it time to do updates?
             if (currentEasternTime < this.nextMarketClosed.AddMinutes(30))
             {
                 return false;
             }
 
             this.lastMarketClosed = GetLastMarketClosedTime(currentEasternTime);
-
-            using var db = this.dbFactory.CreateDbContext();
-            DateTimeOffset? oldestDate = await db.Stocks
-                .Select(s => s.PriceUpdatedDate ?? DateTimeOffset.MinValue)
-                .MinAsync(cancellationToken).ConfigureAwait(false);
-
-            if (oldestDate != null && oldestDate > this.lastMarketClosed)
+            bool isReady = await this.updateStockPrices.ReadyToUpdate(frequency, this.lastMarketClosed, cancellationToken).ConfigureAwait(false);
+            if (!isReady)
             {
-                this.nextMarketClosed = this.lastMarketClosed.AddDays(1);
                 return false;
             }
 
-            // Set the next market closed time to the next day.
             this.nextMarketClosed = this.lastMarketClosed.AddDays(1);
             this.logger.LogInformation("currentEasternTime = {0}, nextMarketClosed = {1} EST", currentEasternTime, this.nextMarketClosed);
 

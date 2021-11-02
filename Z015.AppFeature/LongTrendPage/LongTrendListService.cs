@@ -103,7 +103,7 @@ namespace Z015.AppFeature.LongTrendPage
                 lastClose = item.Close;
             }
 
-            if (validItem)
+            if (validItem && stockPrices.Any())
             {
                 int score = CalculateScore(percentages);
                 rows.Add(new(currentSymbol, percentages, firstClose, score));

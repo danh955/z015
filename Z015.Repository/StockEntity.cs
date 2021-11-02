@@ -3,7 +3,6 @@
 // </copyright>
 namespace Z015.Repository
 {
-    using System;
     using System.Collections.Generic;
 
     /// <summary>
@@ -32,11 +31,6 @@ namespace Z015.Repository
         public string Exchange { get; set; }
 
         /// <summary>
-        /// Gets or sets the last date the price was updated.
-        /// </summary>
-        public DateTimeOffset? PriceUpdatedDate { get; set; }
-
-        /// <summary>
         /// Gets or sets a value indicating whether the symbol was not found.
         /// </summary>
         public bool IsSymbolNotFound { get; set; }
@@ -45,5 +39,10 @@ namespace Z015.Repository
         /// Gets or sets list of stock prices.
         /// </summary>
         public List<StockPriceEntity> StockPrices { get; set; }
+
+        /// <summary>
+        /// Gets or sets list of stock price last updates.
+        /// </summary>
+        public List<StockPriceLastUpdatedEntity> StockPriceLastUpdates { get; set; }
     }
 }

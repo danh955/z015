@@ -21,14 +21,19 @@ namespace Z015.Repository
         }
 
         /// <summary>
-        /// Gets or sets the stock table.
+        /// Gets or sets the stock price last updates table.
         /// </summary>
-        public DbSet<StockEntity> Stocks { get; set; }
+        public DbSet<StockPriceLastUpdatedEntity> StockPriceLastUpdates { get; set; }
 
         /// <summary>
         /// Gets or sets the stock price table.
         /// </summary>
         public DbSet<StockPriceEntity> StockPrices { get; set; }
+
+        /// <summary>
+        /// Gets or sets the stock table.
+        /// </summary>
+        public DbSet<StockEntity> Stocks { get; set; }
 
         /// <summary>
         /// Gets or sets the Tiingo supported stock tickers.
