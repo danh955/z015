@@ -49,11 +49,11 @@ namespace Z015.Repository
         /// <summary>
         /// Gets or sets the date the entity was added.
         /// </summary>
-        public DateTime DateAdded { get; set; }
+        public DateTimeOffset DateAdded { get; set; }
 
         /// <summary>
         /// Gets or sets the date the entity was updated.
         /// </summary>
-        public DateTime DateUpdated { get; set; }
+        public DateTimeOffset DateUpdated { get; set; }
     }
 }

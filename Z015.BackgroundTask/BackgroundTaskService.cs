@@ -18,7 +18,10 @@ namespace Z015.BackgroundTask
     /// </summary>
     public class BackgroundTaskService : BackgroundService
     {
-        private const int TickDelay = 1; // minutes.
+        private const StockFrequency DefaultStockFrequency = StockFrequency.Monthly;
+        private const int FirstYearOfData = 2000;
+        private const int DelayAfterCloseMinutes = 30;
+        private const int TickDelayMinutes = 1; // minutes.
 
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
         private readonly ILogger<BackgroundTaskService> logger;
@@ -54,9 +57,6 @@ namespace Z015.BackgroundTask
             {
                 this.options = newValue;
             });
-
-            this.lastMarketClosed = GetLastMarketClosedTime(EasternTimeNow);
-            this.nextMarketClosed = this.lastMarketClosed;
         }
 
         private static DateTimeOffset EasternTimeNow => TimeZoneInfo.ConvertTime(DateTimeOffset.Now, Constant.EasternTimeZone);
@@ -69,21 +69,28 @@ namespace Z015.BackgroundTask
                 await Task.Delay(5 * 1000, cancellationToken).ConfigureAwait(false);
                 this.logger.LogInformation("Starting {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
 
+                bool canUpdateStockSymbols = false;
                 bool canUpdateStockPrices = false;
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (await this.IsTimeToProcessAsync(StockFrequency.Monthly, cancellationToken).ConfigureAwait(false))
+                    if (this.SetLastNextMarketClosedTime())
                     {
-                        await this.updateStockSymbol.DoUpdateFromTiingoAsync(cancellationToken).ConfigureAwait(false);
+                        canUpdateStockSymbols = true;
                         canUpdateStockPrices = true;
+                    }
+
+                    if (canUpdateStockSymbols)
+                    {
+                        await this.updateStockSymbol.DoUpdateFromTiingoAsync(this.lastMarketClosed, cancellationToken).ConfigureAwait(false);
+                        canUpdateStockSymbols = false;
                     }
 
                     if (canUpdateStockPrices)
                     {
                         bool hasFinished = await this.updateStockPrices.DoUpdateAsync(
-                                                        frequency: StockFrequency.Monthly,
-                                                        firstDate: new(2000, 1, 1),
+                                                        frequency: DefaultStockFrequency,
+                                                        firstDate: new(FirstYearOfData, 1, 1),
                                                         cutOffDate: this.lastMarketClosed,
                                                         takeCount: int.MaxValue,
                                                         cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -91,7 +98,7 @@ namespace Z015.BackgroundTask
                     }
 
                     this.logger.LogInformation("Tick");
-                    await Task.Delay(TickDelay * 60 * 1000, cancellationToken).ConfigureAwait(false);
+                    await Task.Delay(TickDelayMinutes * 60 * 1000, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception e)
@@ -105,41 +112,42 @@ namespace Z015.BackgroundTask
         }
 
         /// <summary>
-        /// Get the last time the market has closed.
+        /// This will set the lastMarketClosed and nextMarketClosed based on the DefaultStockFrequency.
+        /// It will only change if the nextMarketClosed is in the past.
+        /// Date and time are sets to the eastern time zone.
         /// </summary>
-        /// <param name="date">DateTimeOffset.</param>
-        /// <returns>The last time the market has closed.</returns>
-        private static DateTimeOffset GetLastMarketClosedTime(DateTimeOffset date)
+        /// <returns>True if lastMarketClosed and nextMarketClosed has been changed.</returns>
+        private bool SetLastNextMarketClosedTime()
         {
-            DateTimeOffset easternTime = TimeZoneInfo.ConvertTime(date, Constant.EasternTimeZone);
-            return new DateTimeOffset(easternTime.Subtract(Constant.MarketClosedTime).Date, easternTime.Offset)
-                .Add(Constant.MarketClosedTime);
-        }
-
-        /// <summary>
-        /// Check if its time to processing.
-        /// </summary>
-        /// <returns>True if its time to process.</returns>
-        private async Task<bool> IsTimeToProcessAsync(StockFrequency frequency, CancellationToken cancellationToken)
-        {
-            DateTimeOffset currentEasternTime = EasternTimeNow;
-
-            if (currentEasternTime < this.nextMarketClosed.AddMinutes(30))
+            DateTimeOffset easternTime = EasternTimeNow;
+            if (this.nextMarketClosed.AddMinutes(DelayAfterCloseMinutes) > easternTime)
             {
                 return false;
             }
 
-            this.lastMarketClosed = GetLastMarketClosedTime(currentEasternTime);
-            bool isReady = await this.updateStockPrices.ReadyToUpdate(frequency, this.lastMarketClosed, cancellationToken).ConfigureAwait(false);
-            if (!isReady)
+            switch (DefaultStockFrequency)
             {
-                return false;
+                case StockFrequency.Monthly:
+                    {
+                        var firstDayOfMonth = easternTime.AddDays(0 - easternTime.Day + 1);
+                        this.lastMarketClosed = GetLastMarketClosed(firstDayOfMonth);
+                        this.nextMarketClosed = this.lastMarketClosed.AddMonths(1);
+                        break;
+                    }
+
+                default:
+                    throw new NotImplementedException();
             }
 
-            this.nextMarketClosed = this.lastMarketClosed.AddDays(1);
-            this.logger.LogInformation("currentEasternTime = {0}, nextMarketClosed = {1} EST", currentEasternTime, this.nextMarketClosed);
+            this.logger.LogInformation("lastMarketClosed = {0}, nextMarketClosed = {1}", this.lastMarketClosed, this.nextMarketClosed);
 
             return true;
+
+            static DateTimeOffset GetLastMarketClosed(DateTimeOffset easternTime)
+            {
+                return new DateTimeOffset(easternTime.Subtract(Constant.MarketClosedTime).Date, easternTime.Offset)
+                    .Add(Constant.MarketClosedTime);
+            }
         }
     }
 }

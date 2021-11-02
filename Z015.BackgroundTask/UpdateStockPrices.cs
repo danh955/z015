@@ -104,19 +104,6 @@ namespace Z015.BackgroundTask
             return false;
         }
 
-        /// <summary>
-        /// Are we ready to do update stock prices.
-        /// </summary>
-        /// <param name="frequency">Frequency of the stock data.</param>
-        /// <param name="cutOffDate">Process any stock before the cut off date.</param>
-        /// <param name="cancellationToken">CancellationToken.</param>
-        /// <returns>True if its time to process.</returns>
-        internal async Task<bool> ReadyToUpdate(StockFrequency frequency, DateTimeOffset cutOffDate, CancellationToken cancellationToken)
-        {
-            var symbols = await this.GetListOfSymbols(frequency, cutOffDate, 1, cancellationToken).ConfigureAwait(false);
-            return symbols.Any();
-        }
-
         private async Task AddNewStockPricesAsync(UpdateStockPricesOptions options, Dictionary<DateTime, StockPriceEntity> yahooDictionary, Dictionary<DateTime, StockPriceEntity> dbDictionary)
         {
             using var db = this.dbFactory.CreateDbContext();

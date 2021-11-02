@@ -41,14 +41,27 @@ namespace Z015.BackgroundTask
         /// <summary>
         /// Do update from Tiingo of symbols in database.
         /// </summary>
+        /// <param name="lastMarketClosed">The last time the market was closed.</param>
         /// <param name="cancellationToken">CancellationToken.</param>
         /// <returns>Task.</returns>
-        internal async Task DoUpdateFromTiingoAsync(CancellationToken cancellationToken)
+        internal async Task DoUpdateFromTiingoAsync(DateTimeOffset lastMarketClosed, CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingoAsync));
-
             try
             {
+                using var db = this.dbFactory.CreateDbContext();
+                DateTimeOffset lastDateUpdated = await db.TiingoSupportedTickers
+                                                .Select(t => t.DateUpdated)
+                                                .OrderBy(date => date)
+                                                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+
+                if (lastDateUpdated > lastMarketClosed)
+                {
+                    this.logger.LogInformation("Skipping updating symbols.");
+                    return;
+                }
+
+                this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingoAsync));
+
                 // Get a list of supported Tiingo tickers.
                 var (tiingoStocks, errorMessage) = await this.tiingo.GetSupportedTickersAsync(cancellationToken);
                 if (errorMessage != null)
@@ -123,7 +136,7 @@ namespace Z015.BackgroundTask
                                         .Select(g => g.First()) // Remove duplicates.
                                         .ToDictionary(t => new { t.Ticker, t.Exchange, t.StartDate });
 
-            var now = DateTime.Now;
+            var now = DateTimeOffset.Now;
 
             //// Delete tickers.
 
