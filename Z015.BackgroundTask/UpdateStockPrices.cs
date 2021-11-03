@@ -21,11 +21,16 @@ namespace Z015.BackgroundTask
     /// </summary>
     public class UpdateStockPrices
     {
+        private static readonly string[] SkipHttpStatusCode =
+            {
+                HttpStatusCode.NotFound.ToString(),
+                HttpStatusCode.BadRequest.ToString(),
+            };
+
         private readonly ActionBlock<UpdateStockPricesOptions> actionBlock;
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
         private readonly ILogger<UpdateStockPrices> logger;
         private readonly IYahooService yahoo;
-
         private int count = 0;
 
         /// <summary>
@@ -261,7 +266,7 @@ namespace Z015.BackgroundTask
                 var (isSuccessful, rawPrices, errorMessage) = await this.yahoo.GetStockPricesAsync(options.Symbol, options.FirstDate, options.LastDate, options.Frequency.ToYahooInterval(), options.CancellationToken).ConfigureAwait(false);
                 if (!isSuccessful)
                 {
-                    if (errorMessage == HttpStatusCode.NotFound.ToString())
+                    if (SkipHttpStatusCode.Contains(errorMessage))
                     {
                         await this.SetNextTryDateAsync(options, false).ConfigureAwait(false);
                         return;
