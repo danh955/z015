@@ -10,6 +10,7 @@ namespace Z015.Website
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Z015.AppFeature;
     using Z015.Repository;
 
@@ -53,8 +54,11 @@ namespace Z015.Website
         /// </summary>
         /// <param name="app">IApplicationBuilder.</param>
         /// <param name="env">IWebHostEnvironment.</param>
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        /// <param name="logger">ILogger.</param>
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            logger.LogInformation("EnvironmentName: {0} ", env.EnvironmentName);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

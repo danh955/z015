@@ -7,7 +7,6 @@ namespace Z015.Website
     using System;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Serilog;
 
@@ -23,13 +22,10 @@ namespace Z015.Website
         /// <returns>Task.</returns>
         public static async Task Main(string[] args)
         {
-            SetupSerilog();
-            Log.Information("Program Started.");
-
             try
             {
                 await Host.CreateDefaultBuilder(args)
-                    .UseSerilog()
+                    .ConfigureSerilog()
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                         webBuilder.UseStartup<Startup>();
@@ -48,15 +44,19 @@ namespace Z015.Website
             }
         }
 
-        private static void SetupSerilog()
+        private static IHostBuilder ConfigureSerilog(this IHostBuilder builder)
         {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", false, true)
-                .Build();
+            builder.ConfigureServices((context, services) =>
+            {
+                Log.Logger = new LoggerConfiguration()
+                            .ReadFrom.Configuration(context.Configuration)
+                            .CreateLogger();
+            })
+                .UseSerilog();
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
+            Log.Information("Program Starting.");
+
+            return builder;
         }
     }
 }
