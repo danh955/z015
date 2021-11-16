@@ -12,6 +12,7 @@ namespace Z015.Website
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Z015.AppFeature;
+    using Z015.BackgroundTask;
     using Z015.Repository;
 
     /// <summary>
@@ -47,6 +48,7 @@ namespace Z015.Website
             services.AddServerSideBlazor();
             services.AddPooledDbContextFactory<RepositoryDbContext>(options => options.UseSqlServer(connectionString, p => p.MigrationsAssembly(typeof(Startup).Namespace)));
             services.AddAppFeatureService();
+            services.AddBackgroundTaskService(this.Configuration);
         }
 
         /// <summary>

@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Z015.AppFeature\Z015.AppFeature.csproj" />
+    <ProjectReference Include="..\Z015.BackgroundTask\Z015.BackgroundTask.csproj" />
   </ItemGroup>
 
   <ItemGroup>
