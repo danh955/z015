@@ -2,8 +2,8 @@
  
 ### Using
 
-- [Visual Studio 2019 v16](https://visualstudio.microsoft.com/)
-- [.NET 5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+- [Visual Studio 2022 v17](https://visualstudio.microsoft.com/)
+- [.NET 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
 
 ### NuGet
 
@@ -29,9 +29,9 @@
 
 ### Visual Studio Extensions
 
-- [CodeMaid](https://marketplace.visualstudio.com/items?itemName=SteveCadwallader.CodeMaid)
-- [Visual Studio Spell Checker (VS2017 and Later)](https://marketplace.visualstudio.com/items?itemName=EWoodruff.VisualStudioSpellCheckerVS2017andLater)
+- [CodeMaid](https://marketplace.visualstudio.com/items?itemName=SteveCadwallader.CodeMaidVS2022)
+- [Visual Studio Spell Checker (VS2022 and Later)](https://marketplace.visualstudio.com/items?itemName=EWoodruff.VisualStudioSpellCheckerVS2022andLater)
 
 ### CSS Framework
 
-- Hand coded
+- [Halfmoon](https://www.gethalfmoon.com)
