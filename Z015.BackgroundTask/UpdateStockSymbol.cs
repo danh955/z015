@@ -60,13 +60,13 @@ namespace Z015.BackgroundTask
                     return;
                 }
 
-                this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingoAsync));
+                this.logger.LogInformation("{Class}.{Function}", nameof(UpdateStockSymbol), nameof(this.DoUpdateFromTiingoAsync));
 
                 // Get a list of supported Tiingo tickers.
                 var (tiingoStocks, errorMessage) = await this.tiingo.GetSupportedTickersAsync(cancellationToken);
                 if (errorMessage != null)
                 {
-                    this.logger.LogWarning("{0} error: {2}", nameof(this.tiingo.GetSupportedTickersAsync), errorMessage);
+                    this.logger.LogWarning("{Function} error: {ErrorMessage}", nameof(this.tiingo.GetSupportedTickersAsync), errorMessage);
                     return;
                 }
 
@@ -75,7 +75,7 @@ namespace Z015.BackgroundTask
             }
             catch (Exception e)
             {
-                this.logger.LogError(e, "Error: {0}", e.Message);
+                this.logger.LogError(e, "Error: {ErrorMessage}", e.Message);
             }
         }
 
@@ -87,7 +87,7 @@ namespace Z015.BackgroundTask
         /// <returns>Task.</returns>
         private async Task UpdateStockSymbolTable(IEnumerable<TiingoSupportedStockTicker> tiingoStocks, CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.UpdateStockSymbolTable));
+            this.logger.LogInformation("{Class}.{Function}", nameof(UpdateStockSymbol), nameof(this.UpdateStockSymbolTable));
 
             // Any stock ending before the cut off date will not be considered.
             DateTime cutOffDate = DateTime.Today.AddDays(-7);
@@ -113,7 +113,7 @@ namespace Z015.BackgroundTask
                                     //// EndDate = d.Max(v => v.EndDate),
                                 });
 
-            this.logger.LogInformation("Adding {0:#,##0} stock symbols.", newStocks.Count());
+            this.logger.LogInformation("Adding {NewStocksCount:#,##0} stock symbols.", newStocks.Count());
 
             db.Stocks.AddRange(newStocks);
             await db.SaveChangesAsync(cancellationToken);
@@ -127,7 +127,7 @@ namespace Z015.BackgroundTask
         /// <returns>Task.</returns>
         private async Task UpdateSupportedTickerTable(IEnumerable<TiingoSupportedStockTicker> tiingoStocks, CancellationToken cancellationToken)
         {
-            this.logger.LogInformation("{0}.{1}", nameof(UpdateStockSymbol), nameof(this.UpdateSupportedTickerTable));
+            this.logger.LogInformation("{Class}.{Function}", nameof(UpdateStockSymbol), nameof(this.UpdateSupportedTickerTable));
 
             using var db = this.dbFactory.CreateDbContext();
             var dbTickerDictionary = await db.TiingoSupportedTickers.ToDictionaryAsync(t => new { t.Ticker, t.Exchange, t.StartDate }, cancellationToken);
@@ -146,7 +146,7 @@ namespace Z015.BackgroundTask
 
             if (deleteTickers.Any())
             {
-                this.logger.LogInformation("Deleting {0:#,##0} tickers from {1} table.", deleteTickers.Count(), nameof(db.TiingoSupportedTickers));
+                this.logger.LogInformation("Deleting {DeleteTickers.Count:#,##0} tickers from {TableName} table.", deleteTickers.Count(), nameof(db.TiingoSupportedTickers));
                 db.TiingoSupportedTickers.RemoveRange(deleteTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }
@@ -173,7 +173,7 @@ namespace Z015.BackgroundTask
 
             if (updateTickers.Any())
             {
-                this.logger.LogInformation("Updating {0:#,##0} tickers in {1} table.", updateTickers.Count, nameof(db.TiingoSupportedTickers));
+                this.logger.LogInformation("Updating {UpdateTickersCount:#,##0} tickers in {TableName} table.", updateTickers.Count, nameof(db.TiingoSupportedTickers));
                 db.TiingoSupportedTickers.UpdateRange(updateTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }
@@ -196,7 +196,7 @@ namespace Z015.BackgroundTask
 
             if (newTickers.Any())
             {
-                this.logger.LogInformation("Adding {0:#,##0} to {1} tickers table.", newTickers.Count(), nameof(db.TiingoSupportedTickers));
+                this.logger.LogInformation("Adding {NewTickersCount:#,##0} to {TableName} table.", newTickers.Count(), nameof(db.TiingoSupportedTickers));
                 db.TiingoSupportedTickers.AddRange(newTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }

@@ -45,7 +45,7 @@ namespace Hilres.FinanceClient.Yahoo
         public async Task<PriceListResult> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken)
         {
             await Task.Delay(this.RequestDelay, cancellationToken);  // Keep it slow.
-            this.logger.LogDebug("GetStockPricesAsync symbol={0}, firstDate={1}, lastDate={2}, interval={3}", symbol, firstDate, lastDate, interval);
+            this.logger.LogDebug("GetStockPricesAsync symbol={Symbol}, firstDate={FirstDate}, lastDate={LastDate}, interval={Interval}", symbol, firstDate, lastDate, interval);
 
             string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
             string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
@@ -82,12 +82,12 @@ namespace Hilres.FinanceClient.Yahoo
                                             }
                                             catch (FormatException e)
                                             {
-                                                this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
+                                                this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
                                                 return null;
                                             }
                                             catch (BadDataException e)
                                             {
-                                                this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
+                                                this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
                                                 return null;
                                             }
                                         });
@@ -132,14 +132,14 @@ namespace Hilres.FinanceClient.Yahoo
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    this.logger.LogDebug($"{nameof(this.GetCsvItems)} canceled.");
+                    this.logger.LogDebug("{Function} canceled.", nameof(this.GetCsvItems));
                     return new(false, items, "Canceled");
                 }
 
                 return new(true, items, null);
             }
 
-            this.logger.LogWarning($"Failed HTTP status code: {response.StatusCode} - {response.ReasonPhrase}\n  URL: {uri}");
+            this.logger.LogWarning("Failed HTTP status code: {StatusCode} - {ReasonPhrase}\n  URL: {Uri}", response.StatusCode, response.ReasonPhrase, uri);
             return new(false, null, response.StatusCode.ToString());
         }
     }

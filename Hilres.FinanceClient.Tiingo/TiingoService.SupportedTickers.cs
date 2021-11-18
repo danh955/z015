@@ -49,7 +49,7 @@ namespace Hilres.FinanceClient.Tiingo
                                         }
                                         catch (FormatException e)
                                         {
-                                            this.logger.LogError($"{e.Message}  CSV[{csv.Parser.RawRow}] = {csv.Parser.RawRecord}");
+                                            this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
                                             throw;
                                         }
                                     });
@@ -100,7 +100,7 @@ namespace Hilres.FinanceClient.Tiingo
                 return (items, null);
             }
 
-            this.logger.LogWarning($"Failed HTTP status code: {response.StatusCode} - {response.ReasonPhrase}\n  URL: {uri}");
+            this.logger.LogWarning("Failed HTTP status code: {StatusCode} - {ReasonPhrase}\n  URL: {Uri}", response.StatusCode, response.ReasonPhrase, uri);
             return (null, $"{response.StatusCode}");
         }
     }

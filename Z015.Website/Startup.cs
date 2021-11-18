@@ -59,7 +59,7 @@ namespace Z015.Website
         /// <param name="logger">ILogger.</param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            logger.LogInformation("EnvironmentName: {0} ", env.EnvironmentName);
+            logger.LogInformation("EnvironmentName: {EnvironmentName} ", env.EnvironmentName);
 
             if (env.IsDevelopment())
             {

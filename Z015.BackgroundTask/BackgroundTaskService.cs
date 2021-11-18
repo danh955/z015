@@ -67,7 +67,7 @@ namespace Z015.BackgroundTask
             try
             {
                 await Task.Delay(5 * 1000, cancellationToken).ConfigureAwait(false);
-                this.logger.LogInformation("Starting {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+                this.logger.LogInformation("Starting {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
 
                 bool canUpdateStockSymbols = false;
                 bool canUpdateStockPrices = false;
@@ -103,11 +103,11 @@ namespace Z015.BackgroundTask
             }
             catch (Exception e)
             {
-                this.logger.LogError(e, "Error {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+                this.logger.LogError(e, "Error {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
             }
             finally
             {
-                this.logger.LogInformation("Ending {0}.{1}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+                this.logger.LogInformation("Ending {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
             }
         }
 
@@ -140,7 +140,7 @@ namespace Z015.BackgroundTask
                     throw new NotImplementedException();
             }
 
-            this.logger.LogInformation("lastMarketClosed = {0}, nextMarketClosed = {1}", this.lastMarketClosed, this.nextMarketClosed);
+            this.logger.LogInformation("lastMarketClosed = {LastMarketClosed}, nextMarketClosed = {NextMarketClosed}", this.lastMarketClosed, this.nextMarketClosed);
 
             return true;
 

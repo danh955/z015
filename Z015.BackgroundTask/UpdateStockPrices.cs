@@ -78,7 +78,7 @@ namespace Z015.BackgroundTask
                 return true;
             }
 
-            this.logger.LogInformation("Queuing symbols.  Count: {0:#,##0}", symbols.Count());
+            this.logger.LogInformation("Queuing symbols.  Count: {SymbolsCount:#,##0}", symbols.Count());
             foreach (var (stockId, symbol) in symbols)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -96,12 +96,12 @@ namespace Z015.BackgroundTask
                     CancellationToken = cancellationToken,
                 };
 
-                this.logger.LogDebug("Queuing {0}", options);
+                this.logger.LogDebug("Queuing {Options}", options);
                 var isAccepted = await this.actionBlock.SendAsync(options, cancellationToken).ConfigureAwait(false);
 
                 if (!isAccepted)
                 {
-                    this.logger.LogWarning("ActionBlock rejecting new items. {0}", options);
+                    this.logger.LogWarning("ActionBlock rejecting new items. {Options}", options);
                 }
             }
 
@@ -118,7 +118,7 @@ namespace Z015.BackgroundTask
 
             if (newPricess.Any())
             {
-                this.logger.LogDebug("Adding {0:#,##0} items into {1} table.", newPricess.Count(), nameof(db.StockPrices));
+                this.logger.LogDebug("Adding {NewPricessCount:#,##0} items into {TableName} table.", newPricess.Count(), nameof(db.StockPrices));
                 db.StockPrices.AddRange(newPricess);
                 await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
@@ -137,7 +137,7 @@ namespace Z015.BackgroundTask
 
             if (deletePrices.Any())
             {
-                this.logger.LogDebug("Deleting {0:#,##0} items from {1} table.", deletePrices.Count(), nameof(db.StockPrices));
+                this.logger.LogDebug("Deleting {DeletePricesCount:#,##0} items from {TableName} table.", deletePrices.Count(), nameof(db.StockPrices));
                 db.StockPrices.RemoveRange(deletePrices);
                 await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
@@ -208,7 +208,7 @@ namespace Z015.BackgroundTask
 
             if (!found)
             {
-                this.logger.LogInformation("{0} not found.  Next try after {1}", options.Symbol, updatedDate);
+                this.logger.LogInformation("{OptionsSymbol} not found.  Next try after {UpdatedDate}", options.Symbol, updatedDate);
             }
         }
 
@@ -234,7 +234,7 @@ namespace Z015.BackgroundTask
 
             if (updatePrices.Any())
             {
-                this.logger.LogDebug("Updating {0:#,##0} item in {1} table.", updatePrices.Count, nameof(db.StockPrices));
+                this.logger.LogDebug("Updating {UpdatePricesCount:#,##0} item in {TableName} table.", updatePrices.Count, nameof(db.StockPrices));
                 db.StockPrices.UpdateRange(updatePrices);
                 await db.SaveChangesAsync(options.CancellationToken).ConfigureAwait(false);
             }
@@ -255,11 +255,11 @@ namespace Z015.BackgroundTask
             try
             {
                 this.count++;
-                this.logger.LogDebug("({0}, {1}) Processing update for {2}", this.actionBlock.InputCount, this.count, options);
+                this.logger.LogDebug("({ActionBlockInputCount}, {Count}) Processing update for {Options}", this.actionBlock.InputCount, this.count, options);
 
                 if (options.CancellationToken.IsCancellationRequested)
                 {
-                    this.logger.LogInformation("UpdatePriceWorker has been canceled.  {0}", options.Symbol);
+                    this.logger.LogDebug("UpdatePriceWorker has been canceled.  {Symbol}", options.Symbol);
                     return;
                 }
 
@@ -272,11 +272,11 @@ namespace Z015.BackgroundTask
                         return;
                     }
 
-                    this.logger.LogWarning("{0}.{1} error: {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
+                    this.logger.LogWarning("{Class}.{Function} error: {ErrorMessage}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), errorMessage);
                     return;
                 }
 
-                this.logger.LogInformation("({0}, {1}) Retrieved {2,5:#,##0} {3}", this.actionBlock.InputCount, this.count, rawPrices?.Count, options);
+                this.logger.LogInformation("({ActionBlock.InputCount}, {Count}) Retrieved {RawPricesCount,5:#,##0} {Options}", this.actionBlock.InputCount, this.count, rawPrices?.Count, options);
 
                 var yahooDictionary = rawPrices
                         .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
@@ -312,7 +312,7 @@ namespace Z015.BackgroundTask
             }
             catch (Exception e)
             {
-                this.logger.LogError(e, "{0}.{1} {2}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), options);
+                this.logger.LogError(e, "{Class}.{Function} {Options}", nameof(UpdateStockPrices), nameof(this.UpdatePriceWorker), options);
             }
         }
     }

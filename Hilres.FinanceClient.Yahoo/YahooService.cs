@@ -79,7 +79,7 @@ namespace Hilres.FinanceClient.Yahoo
                 tryCount++;
             }
 
-            this.logger.LogInformation("Got cookie. tryCount = {0}, Crumb = {1}, Cookie = {2}", tryCount, crumb, cookie);
+            this.logger.LogInformation("Got cookie. tryCount = {TryCount}, Crumb = {Crumb}, Cookie = {Cookie}", tryCount, crumb, cookie);
             this.httpClient.DefaultRequestHeaders.Add(HttpRequestHeader.Cookie.ToString(), cookie);
             this.crumb = crumb;
         }
@@ -104,7 +104,7 @@ namespace Hilres.FinanceClient.Yahoo
                 var cookie = GetCookie(response, "Set-Cookie");
                 if (string.IsNullOrEmpty(cookie))
                 {
-                    this.logger.LogWarning("{0}  Cookie not found", nameof(this.TryGetCookieAndCrumbAsync));
+                    this.logger.LogWarning("{Function}  Cookie not found", nameof(this.TryGetCookieAndCrumbAsync));
                     return (null, null);
                 }
 
@@ -112,14 +112,14 @@ namespace Hilres.FinanceClient.Yahoo
                 var matches = this.regexCrumb.Matches(html);
                 if (matches.Count != 1)
                 {
-                    this.logger.LogWarning("{0}  Crumb not found", nameof(this.TryGetCookieAndCrumbAsync));
+                    this.logger.LogWarning("{Function}  Crumb not found", nameof(this.TryGetCookieAndCrumbAsync));
                     return (cookie, null);
                 }
 
                 var crumb = matches[0].Groups["crumb"]?.Value?.Replace("\\u002F", "/");
                 if (string.IsNullOrWhiteSpace(crumb))
                 {
-                    this.logger.LogWarning("{0}  Crumb is empty", nameof(this.TryGetCookieAndCrumbAsync));
+                    this.logger.LogWarning("{Function}  Crumb is empty", nameof(this.TryGetCookieAndCrumbAsync));
                     return (cookie, null);
                 }
 
