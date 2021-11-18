@@ -5,6 +5,7 @@
 namespace Z015.BackgroundTask
 {
     using System;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
@@ -21,12 +22,13 @@ namespace Z015.BackgroundTask
         private const StockFrequency DefaultStockFrequency = StockFrequency.Monthly;
         private const int FirstYearOfData = 2000;
         private const int DelayAfterCloseMinutes = 60;
-        private const int TickDelayMinutes = 5;
 
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
         private readonly ILogger<BackgroundTaskService> logger;
         private readonly UpdateStockPrices updateStockPrices;
         private readonly UpdateStockSymbol updateStockSymbol;
+        private readonly HttpClient keepAliveHttpClient;
+
         private DateTimeOffset lastMarketClosed;
         private DateTimeOffset nextMarketClosed;
 
@@ -52,6 +54,7 @@ namespace Z015.BackgroundTask
             this.updateStockPrices = updateStockPrices;
             this.dbFactory = dbFactory;
             this.logger = logger;
+            this.keepAliveHttpClient = new();
 
             optionMonitor.OnChange(newValue =>
             {
@@ -97,17 +100,44 @@ namespace Z015.BackgroundTask
                         canUpdateStockPrices = !hasFinished;
                     }
 
-                    this.logger.LogInformation("Tick");
-                    await Task.Delay(TickDelayMinutes * 60 * 1000, cancellationToken).ConfigureAwait(false);
+                    var tickDelay = Math.Max(this.options.TickDelayMinutes ?? 5, 1);
+                    this.logger.LogInformation("Tick ({TickDelayMinutes})", tickDelay);
+
+                    await this.KeepAliveAsync(canUpdateStockSymbols || canUpdateStockPrices);
+                    await Task.Delay(tickDelay * 60 * 1000, cancellationToken).ConfigureAwait(false);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.logger.LogError(e, "Error {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+                this.logger.LogError(ex, "Error {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
             }
             finally
             {
                 this.logger.LogInformation("Ending {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
+            }
+        }
+
+        /// <summary>
+        /// This is used to keep asp.net running while the background task is working.
+        /// </summary>
+        /// <param name="doPing">Ping ourselves to keep working.  False if not doing any work.</param>
+        /// <returns>Task.</returns>
+        private async Task KeepAliveAsync(bool doPing)
+        {
+            if (!doPing || string.IsNullOrWhiteSpace(this.options?.KeepAliveUrl))
+            {
+                return;
+            }
+
+            try
+            {
+                this.logger.LogInformation("Keeping Alive {URL}", this.options.KeepAliveUrl);
+                UriBuilder uriBuilder = new(this.options.KeepAliveUrl);
+                _ = await this.keepAliveHttpClient.GetAsync(uriBuilder.Uri);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning("{Function}({KeepAliveUrl}) Error: {ErrorMessage}.", nameof(this.KeepAliveAsync), this.options.KeepAliveUrl, ex.Message);
             }
         }
 

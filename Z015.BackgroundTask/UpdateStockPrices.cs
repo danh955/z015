@@ -276,7 +276,7 @@ namespace Z015.BackgroundTask
                     return;
                 }
 
-                this.logger.LogInformation("({ActionBlock.InputCount}, {Count}) Retrieved {RawPricesCount,5:#,##0} {Options}", this.actionBlock.InputCount, this.count, rawPrices?.Count, options);
+                this.logger.LogInformation("({ActionBlockInputCount}, {Count}) Retrieved {RawPricesCount,5:#,##0} {Options}", this.actionBlock.InputCount, this.count, rawPrices?.Count, options);
 
                 var yahooDictionary = rawPrices
                         .Where(y => y.Open.HasValue && y.High.HasValue && y.Low.HasValue && y.Close.HasValue && y.AdjClose.HasValue && y.Volume.HasValue)
