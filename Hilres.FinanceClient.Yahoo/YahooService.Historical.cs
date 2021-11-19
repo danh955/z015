@@ -21,6 +21,11 @@ namespace Hilres.FinanceClient.Yahoo
     /// </summary>
     public partial class YahooService
     {
+        private readonly CsvConfiguration csvConfiguration = new(CultureInfo.InvariantCulture)
+        {
+            BadDataFound = null,  //// Ignore bad records.
+        };
+
         private DateTime nextCrumbTime = DateTime.MinValue;
 
         /// <summary>
@@ -114,7 +119,7 @@ namespace Hilres.FinanceClient.Yahoo
             {
                 using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
                 using var streamReader = new StreamReader(responseStream);
-                using var csv = new CsvReader(streamReader, new CsvConfiguration(CultureInfo.InvariantCulture));
+                using var csv = new CsvReader(streamReader, this.csvConfiguration);
 
                 if (!cancellationToken.IsCancellationRequested && await csv.ReadAsync().ConfigureAwait(false))
                 {
