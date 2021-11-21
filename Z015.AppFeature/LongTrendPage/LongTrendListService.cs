@@ -38,8 +38,7 @@ namespace Z015.AppFeature.LongTrendPage
         {
             var easternTime = EasternTimeNow;
 
-            // Get current start of month.
-            DateTime endMonth = easternTime.Date.AddDays(1 - easternTime.Day);
+            DateTime endMonth = easternTime.Date.AddDays(1 - easternTime.Day).AddMonths(-1);
 
             // get only the month we want for each year.
             var years = Enumerable.Range(0, yearCount + 1)
@@ -57,7 +56,7 @@ namespace Z015.AppFeature.LongTrendPage
                                 o => o.Id,
                                 i => i.StockId,
                                 (o, i) => new { o.Symbol, i.Date, i.Close })
-                            .GroupBy(k => new { k.Symbol, k.Date }) //// Sometimes the symbol is on both exchanges.
+                            .GroupBy(k => new { k.Symbol, k.Date }) //// Sometimes the symbol is in both exchanges.
                             .Select(g => new { g.Key.Symbol, g.Key.Date, Close = g.Average(i => i.Close) })
                             .OrderBy(v => v.Symbol).ThenBy(v => v.Date)
                             .ToListAsync();

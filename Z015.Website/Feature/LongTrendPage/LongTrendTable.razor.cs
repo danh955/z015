@@ -24,7 +24,11 @@ namespace Z015.Website.Feature.LongTrendPage
         /// <inheritdoc/>
         protected override async Task OnInitializedAsync()
         {
-            this.resultTable = await this.Service.GetLongTrends(10);
+            if (this.resultTable == null)
+            {
+                this.resultTable = await this.Service.GetLongTrends(10);
+            }
+
             await base.OnInitializedAsync();
         }
 
