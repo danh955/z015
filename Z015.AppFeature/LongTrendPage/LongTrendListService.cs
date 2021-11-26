@@ -27,32 +27,31 @@ namespace Z015.AppFeature.LongTrendPage
             this.dbFactory = dbFactory;
         }
 
-        private static DateTimeOffset EasternTimeNow => TimeZoneInfo.ConvertTime(DateTimeOffset.Now, Constant.EasternTimeZone);
-
         /// <summary>
         /// Get long trend table.
         /// </summary>
-        /// <param name="yearCount">Number of years for the price history.</param>
+        /// <param name="options">LongTrendListOptions.</param>
         /// <returns>ResultTable.</returns>
-        public async Task<ResultTable> GetLongTrends(int yearCount)
+        public async Task<ResultTable> GetLongTrends(LongTrendListOptions options)
         {
-            var easternTime = EasternTimeNow;
-
-            DateTime endMonth = easternTime.Date.AddDays(1 - easternTime.Day).AddMonths(-1);
+            //// Convert to DateOnly when EF can handle it.
+            DateTime endDate = new(options.EndYear, options.EndMonth, 1);
 
             // get only the month we want for each year.
-            var years = Enumerable.Range(0, yearCount + 1)
-                .Select(i => endMonth.AddYears(0 - i))
+            var years = Enumerable.Range(0, options.ColumnCount + 1)
+                .Select(i => endDate.AddMonths(0 - (i * options.FrequencyMonths)))
                 .ToList();
 
-            var headers = years.Take(yearCount).Select(y => y.Year.ToString());
+            var headers = years.Take(options.ColumnCount).Select(y => DateOnly.FromDateTime(y));
 
             using var db = this.dbFactory.CreateDbContext();
 
             var stockPrices = await db.Stocks
                             .Where(s => !s.IsSymbolNotFound)
                             .Join(
-                                db.StockPrices.Where(p => years.Contains(p.Date)),
+                                db.StockPrices
+                                    .Where(p => p.Frequency == StockFrequency.Monthly)
+                                    .Where(p => years.Contains(p.Date)),
                                 o => o.Id,
                                 i => i.StockId,
                                 (o, i) => new { o.Symbol, i.Date, i.Close })
@@ -87,14 +86,15 @@ namespace Z015.AppFeature.LongTrendPage
                     if (validItem)
                     {
                         firstClose = item.Close;
-                        percentages = new double?[yearCount];
+                        percentages = new double?[options.ColumnCount];
                     }
                 }
                 else
                 {
                     if (validItem)
                     {
-                        int idx = endMonth.Year - item.Date.Year;
+                        int idx = GetTotalMonths(item.Date, endDate);
+                        idx = idx / options.FrequencyMonths;
                         percentages[idx] = (item.Close - lastClose) / item.Close;
                     }
                 }
@@ -113,7 +113,6 @@ namespace Z015.AppFeature.LongTrendPage
 
         private static int CalculateScore(double?[] percentages)
         {
-            string test = string.Empty;
             int score = 0;
             for (int i = 0; i < percentages.Length; i++)
             {
@@ -121,11 +120,28 @@ namespace Z015.AppFeature.LongTrendPage
                 {
                     bool isPositive = percentages[i].Value >= 0;
                     score = (score << 1) + (isPositive ? 1 : 0);
-                    test += isPositive ? "1" : "0";
                 }
             }
 
             return score;
+        }
+
+        /// <summary>
+        /// Get the total months between two date.  This will count whole months and not care about the day.
+        /// </summary>
+        /// <param name="firstDate">First date.</param>
+        /// <param name="lastDate">Last date.</param>
+        /// <returns>Number of month apart.</returns>
+        private static int GetTotalMonths(DateOnly firstDate, DateOnly lastDate)
+        {
+            int yearsAppart = lastDate.Year - firstDate.Year;
+            int monthsAppart = lastDate.Month - firstDate.Month;
+            return (yearsAppart * 12) + monthsAppart;
+        }
+
+        private static int GetTotalMonths(DateTime firstDate, DateTime lastDate)
+        {
+            return GetTotalMonths(DateOnly.FromDateTime(firstDate), DateOnly.FromDateTime(lastDate));
         }
     }
 }

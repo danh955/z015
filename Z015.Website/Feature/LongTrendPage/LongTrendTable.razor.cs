@@ -21,15 +21,15 @@ namespace Z015.Website.Feature.LongTrendPage
         [Inject]
         protected LongTrendListService Service { get; set; }
 
-        /// <inheritdoc/>
-        protected override async Task OnInitializedAsync()
+        /// <summary>
+        /// Update long trend table.
+        /// </summary>
+        /// <param name="options">LongTrendListOptions.</param>
+        /// <returns>Task.</returns>
+        public async Task UpdateLongTrendTable(LongTrendListOptions options)
         {
-            if (this.resultTable == null)
-            {
-                this.resultTable = await this.Service.GetLongTrends(10);
-            }
-
-            await base.OnInitializedAsync();
+            this.resultTable = await this.Service.GetLongTrends(options);
+            await this.InvokeAsync(this.StateHasChanged);
         }
 
         private static string UpDownColor(double? percentage)

@@ -4,11 +4,12 @@
 
 namespace Z015.AppFeature.LongTrendPage
 {
+    using System;
     using System.Collections.Generic;
 
     /// <summary>
     /// Result table.
     /// Each row has a veritable number of columns.
     /// </summary>
-    public record ResultTable(IEnumerable<string> Header, IEnumerable<ResultRow> Rows);
+    public record ResultTable(IEnumerable<DateOnly> Header, IEnumerable<ResultRow> Rows);
 }

@@ -3,10 +3,20 @@
     <table class="LongTrendTable table table-inner-bordered table-hover">
         <thead>
             <tr>
-                <th>Symbol</th>
-                @foreach (var year in resultTable.Header.Reverse())
+                <th class="border-0"></th>
+                @{ int lastYear = 0; }
+                @foreach (var head in resultTable.Header.Reverse())
                 {
-                    <th>@year</th>
+                    <th class="border-0">@if (head.Year != lastYear) { @head.Year }</th>
+                    lastYear = head.Year;
+                }
+                <th class="border-0"></th>
+            </tr>
+            <tr>
+                <th>Symbol</th>
+                @foreach (var head in resultTable.Header.Reverse())
+                {
+                    <th>@head.ToString("MMM")</th>
                 }
                 <th>Score</th>
             </tr>
@@ -25,4 +35,10 @@
             }
         </tbody>
     </table>
+}
+else
+{
+    <div>
+        Loading . . .
+    </div>
 }
