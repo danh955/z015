@@ -15,6 +15,11 @@ namespace Hilres.FinanceClient.Abstraction
     public interface IYahooService
     {
         /// <summary>
+        /// Gets or sets the delay between API request to Yahoo in milliseconds.
+        /// </summary>
+        public int RequestDelay { get; set; }
+
+        /// <summary>
         /// Get stock history data from Yahoo.
         /// </summary>
         /// <param name="symbol">Symbol of prices to get.</param>

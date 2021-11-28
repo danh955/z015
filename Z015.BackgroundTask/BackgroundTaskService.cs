@@ -20,15 +20,13 @@ namespace Z015.BackgroundTask
     public class BackgroundTaskService : BackgroundService
     {
         private const StockFrequency DefaultStockFrequency = StockFrequency.Monthly;
-        private const int FirstYearOfData = 2000;
         private const int DelayAfterCloseMinutes = 60;
-
+        private const int FirstYearOfData = 2000;
         private readonly IDbContextFactory<RepositoryDbContext> dbFactory;
+        private readonly HttpClient keepAliveHttpClient;
         private readonly ILogger<BackgroundTaskService> logger;
         private readonly UpdateStockPrices updateStockPrices;
         private readonly UpdateStockSymbol updateStockSymbol;
-        private readonly HttpClient keepAliveHttpClient;
-
         private DateTimeOffset lastMarketClosed;
         private DateTimeOffset nextMarketClosed;
 
@@ -49,17 +47,14 @@ namespace Z015.BackgroundTask
             IDbContextFactory<RepositoryDbContext> dbFactory,
             ILogger<BackgroundTaskService> logger)
         {
-            this.options = optionMonitor.CurrentValue;
             this.updateStockSymbol = updateStockSymbol;
             this.updateStockPrices = updateStockPrices;
             this.dbFactory = dbFactory;
             this.logger = logger;
             this.keepAliveHttpClient = new();
 
-            optionMonitor.OnChange(newValue =>
-            {
-                this.options = newValue;
-            });
+            this.SetBackgroundTaskOptions(optionMonitor.CurrentValue);
+            optionMonitor.OnChange(newValue => this.SetBackgroundTaskOptions(newValue));
         }
 
         private static DateTimeOffset EasternTimeNow => TimeZoneInfo.ConvertTime(DateTimeOffset.Now, Constant.EasternTimeZone);
@@ -139,6 +134,12 @@ namespace Z015.BackgroundTask
             {
                 this.logger.LogWarning("{Function}({KeepAliveUrl}) Error: {ErrorMessage}.", nameof(this.KeepAliveAsync), this.options.KeepAliveUrl, ex.Message);
             }
+        }
+
+        private void SetBackgroundTaskOptions(BackgroundTaskOptions newValue)
+        {
+            this.options = newValue;
+            this.updateStockPrices.YahooRequestDelay = newValue.YahooRequestDelay ?? 250;
         }
 
         /// <summary>

@@ -46,6 +46,11 @@ namespace Hilres.FinanceClient.Yahoo
         }
 
         /// <summary>
+        /// Gets or sets the delay between API request to Yahoo in milliseconds.
+        /// </summary>
+        public int RequestDelay { get; set; } = 250;
+
+        /// <summary>
         /// Convert the interval into a string.
         /// </summary>
         /// <param name="interval">StockInterval.</param>

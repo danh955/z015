@@ -34,11 +34,6 @@ namespace Hilres.FinanceClient.Yahoo
         public int CrumbResetInterval { get; set; } = 5;
 
         /// <summary>
-        /// Gets or sets the delay between API request to Yahoo in milliseconds.
-        /// </summary>
-        public int RequestDelay { get; set; } = 250;
-
-        /// <summary>
         /// Get stock history data from Yahoo.
         /// </summary>
         /// <param name="symbol">Symbol of prices to get.</param>

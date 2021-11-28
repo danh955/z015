@@ -21,5 +21,10 @@ namespace Z015.BackgroundTask
         /// This tells how often keep alive will happen.
         /// </summary>
         public int? TickDelayMinutes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the delay between API request to Yahoo in milliseconds.
+        /// </summary>
+        public int? YahooRequestDelay { get; set; }
     }
 }

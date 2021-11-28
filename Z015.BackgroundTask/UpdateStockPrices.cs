@@ -48,6 +48,15 @@ namespace Z015.BackgroundTask
         }
 
         /// <summary>
+        /// Gets or sets the delay between API request to Yahoo in milliseconds.
+        /// </summary>
+        public int YahooRequestDelay
+        {
+            get { return this.yahoo.RequestDelay; }
+            set { this.yahoo.RequestDelay = value; }
+        }
+
+        /// <summary>
         /// Gets how many items are in the input count.
         /// </summary>
         /// <returns>Number of items in the input queue.</returns>
