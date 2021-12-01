@@ -102,6 +102,10 @@ namespace Z015.BackgroundTask
                     await Task.Delay(tickDelay * 60 * 1000, cancellationToken).ConfigureAwait(false);
                 }
             }
+            catch (TaskCanceledException ex)
+            {
+                this.logger.LogInformation("{Class}.{Function} TaskCanceledException: {ErrorMessage}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync), ex.Message);
+            }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, "Error {Class}.{Function}", nameof(BackgroundTaskService), nameof(this.ExecuteAsync));
@@ -160,10 +164,11 @@ namespace Z015.BackgroundTask
             {
                 case StockFrequency.Monthly:
                     {
-                        var firstDayOfMonth = easternTime.AddDays(0 - easternTime.Day + 1);
-                        firstDayOfMonth = new DateTimeOffset(firstDayOfMonth.Date, firstDayOfMonth.Offset);
-                        this.lastMarketClosed = GetLastMarketClosed(firstDayOfMonth);
-                        this.nextMarketClosed = this.lastMarketClosed.AddMonths(1);
+                        // The monthly market closes at the end of the last day of the month.
+                        var lastDayOfMonth = easternTime.AddDays(1 - easternTime.Day).AddMonths(1).AddDays(-1);
+                        var closedTime = new DateTimeOffset(lastDayOfMonth.Date, lastDayOfMonth.Offset).Add(Constant.MarketClosedTime);
+                        this.lastMarketClosed = easternTime < closedTime ? closedTime.AddDays(1).AddMonths(-1).AddDays(-1) : closedTime;
+                        this.nextMarketClosed = this.lastMarketClosed.AddDays(1).AddMonths(1).AddDays(-1);
                         break;
                     }
 
@@ -172,14 +177,15 @@ namespace Z015.BackgroundTask
             }
 
             this.logger.LogInformation("lastMarketClosed = {LastMarketClosed}, nextMarketClosed = {NextMarketClosed}", this.lastMarketClosed, this.nextMarketClosed);
-
             return true;
-
-            static DateTimeOffset GetLastMarketClosed(DateTimeOffset easternTime)
-            {
-                return new DateTimeOffset(easternTime.Subtract(Constant.MarketClosedTime).Date, easternTime.Offset)
-                    .Add(Constant.MarketClosedTime);
-            }
         }
+
+        //// <summary>
+        //// This get the last market closed time for this day.  Its always a date and time before the eastern time parameter.
+        //// </summary>
+        //// <param name="easternTime">DateTimeOffset.</param>
+        //// <returns>DateTimeOffset of when the market is closed.</returns>
+        ////private static DateTimeOffset GetLastMarketClosed(DateTimeOffset easternTime) =>
+        ////            new DateTimeOffset(easternTime.Subtract(Constant.MarketClosedTime).Date, easternTime.Offset).Add(Constant.MarketClosedTime);
     }
 }
