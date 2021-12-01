@@ -51,10 +51,9 @@ namespace Z015.Website
                 Log.Logger = new LoggerConfiguration()
                             .ReadFrom.Configuration(context.Configuration)
                             .CreateLogger();
+                Log.Information("Program Starting.");
             })
                 .UseSerilog();
-
-            Log.Information("Program Starting.");
 
             return builder;
         }

@@ -44,64 +44,72 @@ namespace Hilres.FinanceClient.Yahoo
         /// <returns>Task with PriceListResult.</returns>
         public async Task<PriceListResult> GetStockPricesAsync(string symbol, DateTime? firstDate, DateTime? lastDate, YahooInterval? interval, CancellationToken cancellationToken)
         {
-            await Task.Delay(this.RequestDelay, cancellationToken);  // Keep it slow.
-            this.logger.LogDebug("GetStockPricesAsync symbol={Symbol}, firstDate={FirstDate}, lastDate={LastDate}, interval={Interval}", symbol, firstDate, lastDate, interval);
-
-            string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
-            string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
-            string intervalString = ToIntervalString(interval);
-
-            if (this.nextCrumbTime < DateTime.Now || this.crumb == null)
+            try
             {
-                this.nextCrumbTime = DateTime.Now.AddMinutes(this.CrumbResetInterval);
-                await this.RefreshCookieAndCrumbAsync(cancellationToken);
-            }
+                await Task.Delay(this.RequestDelay, cancellationToken);  // Keep it slow.
+                this.logger.LogDebug("GetStockPricesAsync symbol={Symbol}, firstDate={FirstDate}, lastDate={LastDate}, interval={Interval}", symbol, firstDate, lastDate, interval);
 
-            PriceListResult result = null;
+                string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
+                string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
+                string intervalString = ToIntervalString(interval);
 
-            int tryCount = 3;
-            while (!cancellationToken.IsCancellationRequested && tryCount > 0)
-            {
-                string uri = $"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={period1}&period2={period2}&interval={intervalString}&events=history&includeAdjustedClose=true&crumb={this.crumb}";
-
-                result = await this.GetCsvItems(
-                                        uri: uri,
-                                        cancellationToken: cancellationToken,
-                                        createItem: (csv) =>
-                                        {
-                                            try
-                                            {
-                                                return new YahooPrice(
-                                                            Date: csv.GetField<DateTime>(0),
-                                                            Open: csv.GetDouble(1),
-                                                            High: csv.GetDouble(2),
-                                                            Low: csv.GetDouble(3),
-                                                            Close: csv.GetDouble(4),
-                                                            AdjClose: csv.GetDouble(5),
-                                                            Volume: csv.GetLong(6));
-                                            }
-                                            catch (FormatException e)
-                                            {
-                                                this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
-                                                return null;
-                                            }
-                                            catch (BadDataException e)
-                                            {
-                                                this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
-                                                return null;
-                                            }
-                                        });
-
-                if (result.IsSuccessful || result.ErrorMessage != HttpStatusCode.Unauthorized.ToString())
+                if (this.nextCrumbTime < DateTime.Now || this.crumb == null)
                 {
-                    return result;
+                    this.nextCrumbTime = DateTime.Now.AddMinutes(this.CrumbResetInterval);
+                    await this.RefreshCookieAndCrumbAsync(cancellationToken);
                 }
 
-                await this.RefreshCookieAndCrumbAsync(cancellationToken);
-                tryCount--;
-            }
+                PriceListResult result = null;
 
-            return new(false, result.Prices, $"Error: Too many retries. {result.ErrorMessage}");
+                int tryCount = 3;
+                while (!cancellationToken.IsCancellationRequested && tryCount > 0)
+                {
+                    string uri = $"https://query1.finance.yahoo.com/v7/finance/download/{symbol}?period1={period1}&period2={period2}&interval={intervalString}&events=history&includeAdjustedClose=true&crumb={this.crumb}";
+
+                    result = await this.GetCsvItems(
+                                            uri: uri,
+                                            cancellationToken: cancellationToken,
+                                            createItem: (csv) =>
+                                            {
+                                                try
+                                                {
+                                                    return new YahooPrice(
+                                                                Date: csv.GetField<DateTime>(0),
+                                                                Open: csv.GetDouble(1),
+                                                                High: csv.GetDouble(2),
+                                                                Low: csv.GetDouble(3),
+                                                                Close: csv.GetDouble(4),
+                                                                AdjClose: csv.GetDouble(5),
+                                                                Volume: csv.GetLong(6));
+                                                }
+                                                catch (FormatException e)
+                                                {
+                                                    this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
+                                                    return null;
+                                                }
+                                                catch (BadDataException e)
+                                                {
+                                                    this.logger.LogError("{Message}  CSV[{RawRow}] = {RawRecord}", e.Message, csv.Parser.RawRow, csv.Parser.RawRecord);
+                                                    return null;
+                                                }
+                                            });
+
+                    if (result.IsSuccessful || result.ErrorMessage != HttpStatusCode.Unauthorized.ToString())
+                    {
+                        return result;
+                    }
+
+                    await this.RefreshCookieAndCrumbAsync(cancellationToken);
+                    tryCount--;
+                }
+
+                return new(false, result.Prices, $"Error: Too many retries. {result.ErrorMessage}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                this.logger.LogInformation("{Class}.{Function} TaskCanceledException: {ErrorMessage}", nameof(YahooService), nameof(this.GetStockPricesAsync), ex.Message);
+                return new(false, null, "TaskCanceledException");
+            }
         }
 
         private async Task<PriceListResult> GetCsvItems(string uri, Func<CsvReader, YahooPrice> createItem, CancellationToken cancellationToken)

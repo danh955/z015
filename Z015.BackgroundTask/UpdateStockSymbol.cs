@@ -146,7 +146,7 @@ namespace Z015.BackgroundTask
 
             if (deleteTickers.Any())
             {
-                this.logger.LogInformation("Deleting {DeleteTickers.Count:#,##0} tickers from {TableName} table.", deleteTickers.Count(), nameof(db.TiingoSupportedTickers));
+                this.logger.LogInformation("Deleting {DeleteTickersCount:#,##0} tickers from {TableName} table.", deleteTickers.Count(), nameof(db.TiingoSupportedTickers));
                 db.TiingoSupportedTickers.RemoveRange(deleteTickers);
                 await db.SaveChangesAsync(cancellationToken);
             }
