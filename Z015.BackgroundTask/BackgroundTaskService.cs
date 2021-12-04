@@ -144,6 +144,8 @@ namespace Z015.BackgroundTask
         {
             this.options = newValue;
             this.updateStockPrices.YahooRequestDelay = newValue.YahooRequestDelay ?? 250;
+
+            this.logger.LogInformation("BackgroundTaskOptions  YahooRequestDelay={YahooRequestDelay}, TickDelayMinutes={TickDelayMinutes}, KeepAliveUrl={KeepAliveUrl}", newValue.YahooRequestDelay, newValue.TickDelayMinutes, newValue.KeepAliveUrl);
         }
 
         /// <summary>

@@ -1,26 +1,6 @@
 # z015
 
-
-#### Putting Serilog in CreateDefaultBuilder
-```c
-await Host.CreateDefaultBuilder(args)
-    .ConfigureSerilog()
-    /* more code*/
-    .RunConsoleAsync();
-
-private static IHostBuilder ConfigureSerilog(this IHostBuilder builder)
-{
-    builder.ConfigureServices((context, services) =>
-            {
-                Log.Logger = new LoggerConfiguration()
-                            .ReadFrom.Configuration(context.Configuration)
-                            .CreateLogger();
-            })
-        .UseSerilog();
-
-    Log.Information("Program Starting.");
-
-    return builder;
-}
-```
-
+This will collect the stock market data and create a table showing long term growth stocks by year.
+It will by ranked as if each is a binary number.  Positive years is a one, negative years is a zero.
+Most resent years will be the higher order bits and years in the past will be in the lower order bits.
+This will create a binary number and the higher numbers are better.

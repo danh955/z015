@@ -47,7 +47,7 @@ namespace Hilres.FinanceClient.Yahoo
             try
             {
                 await Task.Delay(this.RequestDelay, cancellationToken);  // Keep it slow.
-                this.logger.LogDebug("GetStockPricesAsync symbol={Symbol}, firstDate={FirstDate}, lastDate={LastDate}, interval={Interval}", symbol, firstDate, lastDate, interval);
+                this.logger.LogDebug("GetStockPricesAsync symbol={Symbol}, firstDate={FirstDate}, lastDate={LastDate}, interval={Interval}, RequestDelay={RequestDelay}", symbol, firstDate, lastDate, interval, this.RequestDelay);
 
                 string period1 = firstDate.HasValue ? firstDate.Value.ToUnixTimestamp() : Constant.EpochString;
                 string period2 = lastDate.HasValue ? lastDate.Value.ToUnixTimestamp() : DateTime.Today.ToUnixTimestamp();
